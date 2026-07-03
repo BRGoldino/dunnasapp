@@ -1,0 +1,14 @@
+{
+  "name": "Dunnas Gerenciamento",
+  "short_name": "Dunnas",
+  "description": "Controle de fiado do refeitório",
+  "start_url": "./dunnas.html",
+  "display": "standalone",
+  "background_color": "#2b241c",
+  "theme_color": "#2b241c",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
