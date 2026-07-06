@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dunnas Gerenciamento</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#2b241c">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dunnas">
+<style>
+  :root{
+    --umber:#2b241c;
+    --umber-2:#38301f;
+    --paper:#f2e9d8;
+    --paper-dim:#cfc2a2;
+    --mustard:#c99a2e;
+    --mustard-light:#e3b94a;
+    --olive:#5c6b3f;
+    --rust:#a54a2a;
+    --ink:#241d14;
+    --line:#8a7a54;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0; max-width:100%; overflow-x:hidden;}
+  body{
+    background:var(--umber);
+    color:var(--paper);
+    font-family: 'Courier New', Consolas, monospace;
+    min-height:100vh;
+    padding-bottom:90px;
+  }
+  h1,h2,h3{
+    font-family: Georgia, 'Times New Roman', serif;
+    letter-spacing:.02em;
+    margin:0 0 8px 0;
+  }
+  header{
+    padding:22px 18px 16px 18px;
+    border-bottom:3px double var(--line);
+    background:linear-gradient(180deg, var(--umber-2), var(--umber));
+    position:sticky; top:0; z-index:20;
+  }
+  header .brand-row{display:flex; align-items:baseline; justify-content:space-between; gap:10px;}
+  header h1{font-size:1.5rem; color:var(--mustard-light); font-weight:700;}
+  header .sub{font-size:.7rem; color:var(--paper-dim); text-transform:uppercase; letter-spacing:.15em;}
+  header .stamp{
+    border:1.5px solid var(--rust); color:var(--rust); font-size:.62rem;
+    padding:3px 7px; transform:rotate(-4deg); border-radius:3px;
+    text-transform:uppercase; letter-spacing:.1em; white-space:nowrap;
+  }
+
+  main{padding:16px 14px 20px 14px; max-width:720px; margin:0 auto;}
+  section{display:none; animation:fade .18s ease;}
+  section.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  .card{
+    background:var(--umber-2);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:14px;
+    margin-bottom:12px;
+  }
+  .card h2{font-size:1.05rem; color:var(--mustard-light); border-bottom:1px dashed var(--line); padding-bottom:8px; margin-bottom:10px;}
+  label{display:block; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--paper-dim); margin:10px 0 4px;}
+  input, select{
+    width:100%; background:var(--umber); color:var(--paper);
+    border:1px solid var(--line); border-radius:4px; padding:9px 10px;
+    font-family:inherit; font-size:.95rem;
+  }
+  input:focus, select:focus{outline:2px solid var(--mustard); outline-offset:1px;}
+  .row{display:flex; gap:8px;}
+  .row > *{flex:1;}
+  button{
+    font-family:inherit; cursor:pointer; border:none; border-radius:4px;
+    padding:10px 14px; font-size:.85rem; font-weight:700; letter-spacing:.03em;
+  }
+  .btn-main{background:var(--mustard); color:var(--ink); width:100%; margin-top:12px;}
+  .btn-main:active{background:var(--mustard-light);}
+  .btn-ghost{background:transparent; color:var(--paper-dim); border:1px solid var(--line);}
+  .btn-danger{background:transparent; color:var(--rust); border:1px solid var(--rust);}
+  .btn-small{padding:5px 9px; font-size:.72rem;}
+
+  nav.tabs{
+    position:fixed; bottom:0; left:0; right:0; z-index:30;
+    display:flex; background:var(--umber-2); border-top:2px solid var(--line);
+    overflow-x:auto;
+  }
+  nav.tabs button{
+    flex:0 0 auto; background:transparent; color:var(--paper-dim); border-radius:0;
+    padding:9px 10px 8px; font-size:11px; display:flex; flex-direction:column; align-items:center; gap:2px;
+    white-space:nowrap; min-width:68px; border-top:3px solid transparent;
+    transition:background .15s, border-color .15s;
+  }
+  nav.tabs button .ic{font-size:19px; line-height:1;}
+  nav.tabs button.active{
+    color:var(--mustard-light); background:var(--umber);
+    border-top:3px solid var(--mustard); font-weight:700;
+  }
+  nav.tabs button.active .ic{ transform:scale(1.15); }
+
+  #tab-pedido{padding-bottom:60px;}
+  .cart-mini-bar{
+    position:fixed; left:0; right:0; bottom:58px; z-index:25;
+    background:var(--mustard); color:var(--ink);
+    padding:12px 16px; display:flex; justify-content:space-between; align-items:center;
+    font-weight:700; font-size:.88rem; cursor:pointer;
+    box-shadow:0 -2px 8px rgba(0,0,0,.3);
+  }
+  .cart-mini-bar:active{background:var(--mustard-light);}
+  .cart-mini-bar .cmb-action{font-size:.82rem;}
+  .cart-mini-bar.cart-pulse{ animation: cartBarPulse .4s ease; }
+  @keyframes cartBarPulse{
+    0%{ transform:scale(1); }
+    30%{ transform:scale(1.03); }
+    100%{ transform:scale(1); }
+  }
+
+  .list-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:9px 0; border-bottom:1px solid var(--umber);
+    gap:8px;
+  }
+  .list-item:last-child{border-bottom:none;}
+  .list-item .name{font-weight:700; color:var(--paper);}
+  .list-item .meta{font-size:.72rem; color:var(--paper-dim);}
+  .tag{
+    display:inline-block; background:var(--olive); color:var(--paper);
+    font-size:.78rem; font-weight:700; padding:5px 10px; border-radius:4px; text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .money{color:var(--mustard-light); font-weight:700;}
+  .money.owe{color:var(--rust);}
+  .empty{color:var(--paper-dim); font-size:.85rem; text-align:center; padding:20px 6px; font-style:italic;}
+
+  .client-card{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px; border:1px solid var(--line); border-radius:5px; margin-bottom:8px;
+    background:var(--umber); cursor:pointer;
+  }
+  .client-card:active{background:#3f3626;}
+  .client-card .cname{font-weight:700; font-size:1rem;}
+  .client-card .cdebt{font-size:1.05rem;}
+
+  .chip-select{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
+  .chip{
+    border:1px solid var(--line); border-radius:20px; padding:.5em 1em; font-size:.8rem;
+    background:var(--umber); color:var(--paper-dim); cursor:pointer;
+  }
+  .chip.on{background:var(--mustard); color:var(--ink); border-color:var(--mustard); font-weight:700;}
+
+  .qty-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px dashed var(--umber);}
+  .qty-controls{display:flex; align-items:center; gap:8px;}
+  .qty-controls button{width:2em; height:2em; padding:0; background:var(--olive); color:var(--paper); font-size:1rem; flex-shrink:0;}
+  .qty-num{min-width:22px; text-align:center; font-weight:700;}
+
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:8px;}
+  .cal-head{font-size:.6rem; text-align:center; color:var(--paper-dim); text-transform:uppercase;}
+  .cal-day{
+    aspect-ratio:1; border:1px solid var(--line); border-radius:4px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; font-size:.78rem; background:var(--umber); cursor:pointer; position:relative;
+  }
+  .cal-day.empty2{border:none; background:transparent; cursor:default;}
+  .cal-day .dnum{font-weight:700;}
+  .cal-day.has-sale{background:#3d3319; border-color:var(--mustard);}
+  .cal-day .dot{width:5px; height:5px; border-radius:50%; background:var(--mustard-light); position:absolute; bottom:5px;}
+  .cal-nav{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
+  .cal-nav button{background:var(--umber); color:var(--paper); border:1px solid var(--line);}
+  .cal-title{font-family:Georgia,serif; color:var(--mustard-light); font-size:1rem;}
+
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(10,8,4,.75); z-index:50;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .modal-bg.show{display:flex;}
+  .modal{
+    background:var(--umber-2); border:1px solid var(--line); border-top:3px solid var(--mustard);
+    border-radius:12px 12px 0 0; width:100%; max-width:720px; max-height:85vh; overflow-y:auto;
+    padding:16px; animation:up .2s ease;
+  }
+  @keyframes up{from{transform:translateY(20px); opacity:0;} to{transform:none; opacity:1;}}
+  .modal-close{float:right; background:transparent; color:var(--paper-dim); font-size:1.2rem; padding:2px 8px;}
+
+  table{width:100%; border-collapse:collapse; font-size:.82rem;}
+  th,td{text-align:left; padding:6px 4px; border-bottom:1px solid var(--umber);}
+  th{color:var(--paper-dim); text-transform:uppercase; font-size:.62rem;}
+
+  .menu-sheet{background:var(--paper); color:var(--ink); border-radius:6px; padding:18px;}
+  .menu-sheet h2{color:var(--rust); font-family:Georgia,serif; text-align:center; border-bottom:2px solid var(--rust); padding-bottom:10px;}
+  .menu-cat{margin-top:22px; font-weight:700; color:var(--olive); text-transform:uppercase; letter-spacing:.12em; font-size:1rem; border-bottom:2px solid var(--olive); padding-bottom:6px;}
+  .menu-item{display:flex; justify-content:space-between; padding:5px 0; font-family:Georgia,serif;}
+  .menu-item .dots{flex:1; border-bottom:1px dotted #999; margin:0 6px 5px;}
+  .menu-item-wrap{margin-bottom:2px;}
+  .menu-item-desc{font-size:.7rem; color:#7a6a55; font-style:italic; margin:-4px 0 4px;}
+
+  .stat-bar-wrap{margin:8px 0;}
+  .stat-bar-label{display:flex; justify-content:space-between; font-size:.78rem; margin-bottom:3px;}
+  .stat-bar-bg{background:var(--umber); border-radius:4px; height:10px; overflow:hidden;}
+  .stat-bar-fill{background:var(--mustard); height:100%;}
+
+  .toast{
+    position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+    background:var(--mustard); color:var(--ink); padding:9px 16px; border-radius:20px;
+    font-size:.8rem; font-weight:700; z-index:60; opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .toast.show{opacity:1;}
+  .search-box{margin-bottom:10px;}
+  small.hint{color:var(--paper-dim); font-size:.68rem; display:block; margin-top:2px;}
+
+  .fullscreen-view-overlay{
+    position:fixed; inset:0; background:var(--umber); z-index:80;
+    overflow-y:auto; padding:14px;
+  }
+  .fullscreen-view-topbar{ position:sticky; top:0; display:flex; justify-content:flex-end; padding-bottom:10px; background:var(--umber); z-index:1; }
+  .fullscreen-view-content{ max-width:720px; margin:0 auto; }
+
+  #printArea{ display:none; }
+  @media print{
+    body > *:not(#printArea){ display:none !important; }
+    #printArea{ display:block !important; }
+  }
+
+  .fiado-confirm-overlay{
+    position:fixed; inset:0; background:rgba(10,8,4,.82); z-index:70;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+    animation:overlayIn .2s ease;
+  }
+  .fiado-confirm-overlay.fade-out{animation:overlayOut .25s ease forwards;}
+  @keyframes overlayIn{from{opacity:0;} to{opacity:1;}}
+  @keyframes overlayOut{from{opacity:1;} to{opacity:0;}}
+  .fiado-confirm-card{
+    background:var(--umber-2); border:2px solid var(--mustard); border-radius:14px;
+    padding:28px 24px; text-align:center; max-width:340px; width:100%;
+    animation:popIn .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes popIn{from{transform:scale(.7); opacity:0;} to{transform:scale(1); opacity:1;}}
+  .fc-check{font-size:2.2rem; margin-bottom:4px;}
+  .fc-name{font-family:Georgia,serif; font-size:1.15rem; color:var(--paper); font-weight:700;}
+  .fc-added{color:var(--olive); background:#3a4526; display:inline-block; padding:4px 12px; border-radius:20px; font-weight:700; margin:10px 0; font-size:.9rem;}
+  .fc-total-label{font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--paper-dim); margin-top:8px;}
+  .fc-total{font-size:1.8rem; font-weight:700; color:var(--rust); margin-top:2px;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div>
+      <h1>Dunnas Gerenciamento</h1>
+      <div class="sub">controle de fiado do refeitório</div>
+    </div>
+    <div class="stamp" id="dateStamp">--/--</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- INÍCIO -->
+  <section id="tab-inicio" class="active">
+    <div class="card">
+      <h2>Resumo</h2>
+      <div class="list-item"><span>Total a receber</span><span class="money owe" id="sumTotalDevido">R$ 0,00</span></div>
+      <div class="list-item"><span>Clientes com fiado ativo</span><span id="sumClientesDevendo">0</span></div>
+      <div class="list-item"><span>Fiado registrado hoje</span><span class="money" id="sumHoje">R$ 0,00</span></div>
+      <div class="list-item"><span>Fiado registrado este mês</span><span class="money" id="sumMes">R$ 0,00</span></div>
+    </div>
+    <div class="card">
+      <h2>Maiores devedores</h2>
+      <div id="topDevedores"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="border:none; padding:0; margin:0;">Atividade recente</h2>
+        <button class="btn-ghost btn-small" onclick="goTab('atividade')">ver tudo</button>
+      </div>
+      <div id="atividadePreview" style="margin-top:8px;"></div>
+    </div>
+    <div class="card">
+      <h2>Atalhos</h2>
+      <button class="btn-main" onclick="goTab('pedido')">+ Registrar fiado de hoje</button>
+      <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="goTab('clientes')">Ver contas dos clientes</button>
+    </div>
+    <div class="card">
+      <h2>Backup dos dados</h2>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Os dados ficam salvos neste navegador/aparelho. Exporte um backup de vez em quando pra não correr risco de perder tudo.</p>
+      <button class="btn-main" onclick="exportBackup()">⬇ Exportar backup (.json)</button>
+      <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="triggerImport()">⬆ Restaurar backup</button>
+      <input type="file" id="importFileInput" accept="application/json" style="display:none;" onchange="importBackup(this)">
+      <p id="backupReminder" style="font-size:.72rem; margin:10px 0 0;"></p>
+    </div>
+  </section>
+
+  <!-- PEDIDO -->
+  <section id="tab-pedido">
+    <div class="card">
+      <h2>Novo fiado</h2>
+      <label>Cliente</label>
+      <select id="pedCliente"></select>
+      <label>Data</label>
+      <input type="date" id="pedData">
+    </div>
+
+    <div class="card">
+      <label>Produtos disponíveis</label>
+      <input class="search-box" id="pedProdutoSearch" placeholder="Buscar produto..." oninput="renderProdutoChips(this.value)">
+      <div id="pedProdutos" class="chip-select"></div>
+    </div>
+
+    <div class="card" id="cartCard">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed var(--line); padding-bottom:8px; margin-bottom:10px;">
+        <h2 style="border:none; padding:0; margin:0;">🛒 Carrinho</h2>
+        <span id="cartCount" class="tag">0 itens</span>
+      </div>
+      <div id="pedQtyArea"></div>
+    </div>
+  </section>
+
+  <div id="cartMiniBar" class="cart-mini-bar" style="display:none;" onclick="salvarPedido()">
+    <span class="cmb-info">🛒 <span id="cmbCount">0 itens</span> · <span id="cmbTotal">R$ 0,00</span></span>
+    <span class="cmb-action">Registrar fiado ›</span>
+  </div>
+
+  <!-- CLIENTES -->
+  <section id="tab-clientes">
+    <div class="card">
+      <h2>Adicionar cliente</h2>
+      <div class="row">
+        <input id="novoClienteNome" placeholder="Nome do cliente">
+        <button class="btn-main" style="width:auto; margin-top:0;" onclick="addCliente()">Add</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Clientes</h2>
+      <input class="search-box" placeholder="Buscar cliente..." oninput="renderClientesLista(this.value)">
+      <div id="listaClientes"></div>
+    </div>
+  </section>
+
+  <!-- PRODUTOS -->
+  <section id="tab-produtos">
+    <div class="card">
+      <h2>Adicionar produto</h2>
+      <label>Nome</label>
+      <input id="novoProdNome" placeholder="Ex: Marmita P">
+      <div class="row">
+        <div>
+          <label>Preço (R$)</label>
+          <input id="novoProdPreco" type="text" inputmode="numeric" placeholder="0,00" oninput="maskCurrencyInput(this)">
+        </div>
+        <div>
+          <label>Categoria</label>
+          <select id="novoProdCatSelect" onchange="onCatSelectChange()">
+            <option value="Sanduíches">Sanduíches</option>
+            <option value="Cuscuz">Cuscuz</option>
+            <option value="Tapiocas">Tapiocas</option>
+            <option value="Diversos">Diversos</option>
+            <option value="Vitaminas">Vitaminas</option>
+            <option value="Sucos">Sucos</option>
+            <option value="Bebidas">Bebidas</option>
+            <option value="__custom__">Outra (personalizada)</option>
+          </select>
+          <input id="novoProdCatCustom" placeholder="Digite a categoria" style="display:none; margin-top:8px;">
+        </div>
+      </div>
+      <label>Descrição (opcional)</label>
+      <input id="novoProdDesc" placeholder="Ex: Pão, ovo e queijo">
+      <button class="btn-main" onclick="addProduto()">Salvar produto</button>
+    </div>
+    <div class="card">
+      <h2>Importar lista de produtos</h2>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Pra importar vários produtos de uma vez (ex: cardápio inteiro). Adiciona produtos novos e atualiza o preço dos que já existem com o mesmo nome — não mexe em clientes, fiados ou ajustes.</p>
+      <button class="btn-ghost" style="width:100%;" onclick="triggerImportProducts()">📋 Importar produtos (.json)</button>
+      <input type="file" id="importProductsInput" accept="application/json" style="display:none;" onchange="importProducts(this)">
+    </div>
+    <div class="card">
+      <h2>Produtos cadastrados</h2>
+      <div id="listaProdutos"></div>
+    </div>
+  </section>
+
+  <!-- CALENDÁRIO -->
+  <section id="tab-calendario">
+    <div class="card">
+      <div class="cal-nav">
+        <button class="btn-small" onclick="calMudarMes(-1)">‹ Anterior</button>
+        <div class="cal-title" id="calTitle"></div>
+        <button class="btn-small" onclick="calMudarMes(1)">Próximo ›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </section>
+
+  <!-- CARDÁPIO -->
+  <section id="tab-cardapio">
+    <div class="card">
+      <h2>Gerador de cardápio</h2>
+      <p style="font-size:.8rem; color:var(--paper-dim);">Gerado automaticamente com os produtos cadastrados.</p>
+      <button class="btn-main" onclick="renderCardapio()">Gerar / Atualizar cardápio</button>
+      <div class="row" style="margin-top:8px;">
+        <button class="btn-ghost" onclick="fullscreenCardapio()">⛶ Tela cheia</button>
+        <button class="btn-ghost" onclick="downloadCardapioImage()">⬇ Baixar imagem</button>
+      </div>
+      <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="printCardapio()">🖨️ Imprimir</button>
+    </div>
+    <div id="cardapioArea"></div>
+  </section>
+
+  <!-- ESTATÍSTICAS -->
+  <section id="tab-stats">
+    <div class="card">
+      <h2>Produtos mais vendidos</h2>
+      <div id="statProdutos"></div>
+    </div>
+    <div class="card">
+      <h2>Clientes mais frequentes</h2>
+      <div id="statClientes"></div>
+    </div>
+  </section>
+
+  <!-- ATIVIDADE -->
+  <section id="tab-atividade">
+    <div class="card">
+      <h2>Atividade recente</h2>
+      <input class="search-box" placeholder="Buscar na atividade..." oninput="renderAtividade(this.value)">
+      <div id="listaAtividade"></div>
+    </div>
+  </section>
+
+  <!-- CONFIGURAÇÕES -->
+  <section id="tab-config">
+    <div class="card">
+      <h2>Tamanho da letra</h2>
+      <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Ajusta o tamanho do texto em todo o app.</p>
+      <div class="chip-select" id="fontSizeOptions">
+        <div class="chip" data-scale="1" onclick="setFontScale(1)">Normal</div>
+        <div class="chip" data-scale="1.25" onclick="setFontScale(1.25)">Grande</div>
+        <div class="chip" data-scale="1.5" onclick="setFontScale(1.5)">Muito grande</div>
+        <div class="chip" data-scale="1.85" onclick="setFontScale(1.85)">Máximo</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Confirmação ao registrar fiado</h2>
+      <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mostra uma tela de revisão (cliente, produtos e valor) antes de confirmar um fiado novo. Desligar faz o registro acontecer na hora, sem revisão.</p>
+      <div class="chip-select" id="confirmFiadoOptions">
+        <div class="chip" data-enabled="1" onclick="setConfirmFiado(true)">Pedir confirmação</div>
+        <div class="chip" data-enabled="0" onclick="setConfirmFiado(false)">Registrar direto</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Backup automático</h2>
+      <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Toda vez que o app for aberto, se já tiver passado o tempo escolhido desde o último backup, ele baixa um novo arquivo sozinho — só funciona quando o app está aberto, não em segundo plano.</p>
+      <div class="chip-select" id="autoBackupOptions">
+        <div class="chip" data-hours="0" onclick="setAutoBackupInterval(0)">Desligado</div>
+        <div class="chip" data-hours="6" onclick="setAutoBackupInterval(6)">A cada 6h</div>
+        <div class="chip" data-hours="12" onclick="setAutoBackupInterval(12)">A cada 12h</div>
+        <div class="chip" data-hours="24" onclick="setAutoBackupInterval(24)">A cada 24h</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Aparência</h2>
+      <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Estilos prontos, ou escolha suas próprias cores.</p>
+      <div class="chip-select" id="themeOptions">
+        <div class="chip" data-theme="classico" onclick="applyTheme('classico')">Clássico</div>
+        <div class="chip" data-theme="floresta" onclick="applyTheme('floresta')">Floresta</div>
+        <div class="chip" data-theme="noite" onclick="applyTheme('noite')">Noite</div>
+        <div class="chip" data-theme="vinho" onclick="applyTheme('vinho')">Vinho</div>
+      </div>
+      <label>Cor de fundo personalizada</label>
+      <input type="color" id="customBgColor" oninput="setCustomColor('--umber', this.value)" style="height:42px; padding:4px; cursor:pointer;">
+      <label>Cor das letras personalizada</label>
+      <input type="color" id="customTextColor" oninput="setCustomColor('--paper', this.value)" style="height:42px; padding:4px; cursor:pointer;">
+      <button style="width:100%; margin-top:10px; background:#c99a2e; color:#241d14; border:2px solid #241d14; font-weight:700;" onclick="resetTheme()">↺ Desfazer / Restaurar padrão</button>
+    </div>
+
+    <div class="card">
+      <h2>Ícone e nome do app</h2>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Gera novos arquivos pra tela inicial. Depois de baixar, suba os 3 arquivos no GitHub (substituindo os antigos) e reinstale o app pra ver a mudança — isso não mexe em nenhum dado salvo.</p>
+      <label>Nome do app</label>
+      <input id="iconAppName" maxlength="12" value="Dunnas" oninput="drawIconPreview()">
+      <label>Letra do ícone</label>
+      <input id="iconLetter" maxlength="2" value="D" oninput="drawIconPreview()">
+      <div class="row">
+        <div>
+          <label>Cor de fundo</label>
+          <input type="color" id="iconBg" value="#2b241c" oninput="drawIconPreview()" style="height:42px; padding:4px; cursor:pointer;">
+        </div>
+        <div>
+          <label>Cor da letra</label>
+          <input type="color" id="iconFg" value="#e3b94a" oninput="drawIconPreview()" style="height:42px; padding:4px; cursor:pointer;">
+        </div>
+      </div>
+      <canvas id="iconPreviewCanvas" width="96" height="96" style="border-radius:18px; margin:14px auto 4px; display:block;"></canvas>
+      <button class="btn-main" onclick="generateIconFiles()">Baixar novos arquivos</button>
+    </div>
+
+    <div class="card">
+      <h2>Notas de atualização</h2>
+      <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mais recente:</p>
+      <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0 0 12px;">
+        <li>Botão "Habilitar clientes padrão" em Configurações — cadastra de uma vez a lista de clientes conhecidos, todos com conta zerada</li>
+        <li>Quitar tudo de um dia com um toque, em vez de item por item</li>
+        <li>Botão "Zerar conta" — marca a dívida inteira do cliente como paga de uma vez, com confirmação dupla</li>
+        <li>"Limpar histórico" do cliente — apaga pedidos/ajustes antigos mantendo o cliente cadastrado, só libera depois que a conta estiver zerada</li>
+        <li>Config → Zona de risco: opção de resetar o app inteiro (clientes, produtos, pedidos, tudo), com confirmação bem forte</li>
+        <li>Corrigido de vez: as abas embaixo não espremem mais o texto uma em cima da outra — cada aba mantém seu tamanho natural e a barra rola de lado quando não cabe tudo</li>
+        <li>Pinça pra dar zoom na tela (afastar/aproximar os dedos) voltou a funcionar — estava bloqueada sem querer</li>
+        <li>Corrigido: menu de abas embaixo não fica mais ilegível/colado em fontes grandes — o tamanho dele agora é fixo, só o conteúdo das telas acompanha o "Tamanho da letra"</li>
+        <li>Aba ativa agora fica bem mais visível (barra colorida em cima, fundo destacado, ícone maior)</li>
+        <li>Botões de produto e de quantidade ajustados pra acompanhar melhor o tamanho da letra escolhido, sem ficar desalinhado</li>
+        <li>Tela de revisão antes de confirmar um fiado — mostra cliente, produtos e total antes de registrar de verdade (dá pra desligar em Config)</li>
+        <li>Frequência do backup no Discord agora é separada da do celular — dá pra deixar o Discord de 1 em 1 hora, por exemplo, mesmo mantendo o celular em 24h</li>
+        <li>Carrinho do fiado com barra fixa no rodapé (igual apps de delivery) — sempre visível com contador e total, sem precisar rolar a tela pra confirmar que adicionou</li>
+        <li>Opções de desenvolvedor: envio automático de cópia do backup pra um canal do Discord (opcional, configurado por link de webhook)</li>
+        <li>Link do webhook fica oculto depois de salvo — mostra só "Webhook 1 · conectado", precisa clicar em "Trocar link" pra ver o campo de novo</li>
+        <li>Backup automático — escolha em Config pra baixar sozinho a cada 6h, 12h ou 24h</li>
+        <li>Botão "Habilitar produtos padrão" em Configurações — carrega o cardápio inteiro da Dunnas com um toque, sem precisar importar arquivo</li>
+        <li>"Importar produtos" agora também atualiza o preço de produtos já existentes, além de adicionar os novos</li>
+        <li>Vírgula automática também no valor de ajuste manual da conta (antes só valia pro preço de produto)</li>
+        <li>Correção no botão de excluir pedido inteiro e no de remover cliente</li>
+        <li>Remover cliente ficou mais simples de confirmar (sem precisar digitar texto exato)</li>
+        <li>Nomes mais claros: "Valor adicionado à conta" e "Pagamento recebido" no lugar de termos técnicos</li>
+        <li>Categorias com letra maior e mais espaçadas, principalmente no cardápio</li>
+      </ul>
+      <p style="font-size:.8rem; color:var(--paper-dim); margin:0 0 4px;">Anteriormente:</p>
+      <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0;">
+        <li>Ajuste manual de dívida (fora de pedidos por produto)</li>
+        <li>Categorias fixas do refeitório + categoria personalizada</li>
+        <li>Seleção de produtos por categoria com busca</li>
+        <li>Confirmação animada ao registrar um fiado ou mudar a conta</li>
+        <li>Extrato do cliente em tela cheia, com opção de baixar/compartilhar</li>
+        <li>Tela cheia, baixar e imprimir no cardápio</li>
+        <li>Temas de cor e personalização de ícone/nome do app</li>
+        <li>Cópia de segurança em texto (.txt), além do .json</li>
+        <li>Aba de Atividade recente e ajuste de tamanho de letra</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Produtos padrão do cardápio</h2>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Habilita de uma vez todos os produtos do cardápio da Dunnas, sem precisar importar arquivo nenhum. Adiciona os que faltam e atualiza o preço dos que já existem com o mesmo nome — nunca mexe em clientes ou fiados.</p>
+      <button class="btn-main" onclick="loadDefaultProducts()">⭐ Habilitar produtos padrão</button>
+    </div>
+
+    <div class="card">
+      <h2>Clientes padrão</h2>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Cadastra de uma vez a lista de clientes já conhecidos, todos com conta zerada. Só adiciona quem ainda não existe (por nome) — nunca mexe em pedidos, dívidas ou produtos.</p>
+      <button class="btn-main" onclick="loadDefaultClients()">⭐ Habilitar clientes padrão</button>
+    </div>
+
+    <div class="card">
+      <h2>Cópia de segurança em texto</h2>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Alternativa ao backup .json — um arquivo de texto simples, fácil de ler, com tudo o que está registrado. Não serve pra restaurar no app, é só pra conferência ou guardar uma cópia legível.</p>
+      <button class="btn-main" onclick="exportBackupTxt()">⬇ Exportar cópia em .txt</button>
+    </div>
+
+    <div class="card">
+      <h2>Sobre</h2>
+      <p style="font-size:.82rem; color:var(--paper); margin:0 0 6px;">Desenvolvido por <strong>Leonardo Arruda</strong>.</p>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin:0 0 6px;">Hospedado gratuitamente via GitHub Pages. Os dados ficam salvos só neste aparelho, não em nenhum servidor.</p>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin:0;">Uso restrito à equipe da Dunnas Alimentação Corporativa.</p>
+    </div>
+
+    <div class="card">
+      <h2>Opções de desenvolvedor</h2>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Envia uma cópia extra de cada backup automático pra um canal do Discord, além de continuar baixando no aparelho normalmente (isso não substitui o backup local, só duplica). O link fica salvo só neste navegador — nunca no código do app.</p>
+      <div id="discordWebhookStatusView" style="display:none;">
+        <div class="list-item">
+          <span>🔒 Webhook 1</span>
+          <span class="tag" style="background:var(--olive);">conectado</span>
+        </div>
+        <button class="btn-ghost" style="width:100%; margin-top:6px;" onclick="toggleDiscordEditMode()">Trocar link</button>
+      </div>
+      <div id="discordWebhookEditView">
+        <label>Link do webhook do Discord</label>
+        <input type="password" id="discordWebhookUrl" placeholder="https://discord.com/api/webhooks/...">
+        <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="saveDiscordWebhook()">Salvar link</button>
+      </div>
+      <div class="chip-select" id="discordEnabledOptions" style="margin-top:12px;">
+        <div class="chip" data-enabled="1" onclick="setDiscordEnabled(true)">Envio ativado</div>
+        <div class="chip" data-enabled="0" onclick="setDiscordEnabled(false)">Desligado</div>
+      </div>
+      <label style="margin-top:12px;">Frequência do envio ao Discord</label>
+      <div class="chip-select" id="discordIntervalOptions">
+        <div class="chip" data-hours="0" onclick="setDiscordBackupInterval(0)">Desligado</div>
+        <div class="chip" data-hours="1" onclick="setDiscordBackupInterval(1)">1 em 1h</div>
+        <div class="chip" data-hours="6" onclick="setDiscordBackupInterval(6)">6h</div>
+        <div class="chip" data-hours="12" onclick="setDiscordBackupInterval(12)">12h</div>
+        <div class="chip" data-hours="24" onclick="setDiscordBackupInterval(24)">24h</div>
+      </div>
+      <small class="hint">Esse tempo é independente do backup local — dá pra manter o do celular em 24h e deixar o do Discord bem mais frequente, por exemplo.</small>
+      <button class="btn-main" style="width:100%; margin-top:10px;" onclick="testDiscordWebhook()">🔧 Enviar teste agora</button>
+    </div>
+
+    <div class="card" style="border:2px solid var(--rust);">
+      <h2 style="color:var(--rust);">⚠️ Zona de risco</h2>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Apaga TUDO: clientes, produtos, pedidos, ajustes e atividade. Volta o app pro estado de recém-instalado. Faça um backup antes se não tiver certeza.</p>
+      <button class="btn-main" style="width:100%; margin-bottom:8px;" onclick="exportBackup()">⬇ Fazer backup agora, por segurança</button>
+      <button class="btn-danger" style="width:100%;" onclick="resetarTudo()">🗑️ Resetar todos os dados do app</button>
+    </div>
+  </section>
+
+</main>
+
+<nav class="tabs">
+  <button data-tab="inicio" onclick="goTab('inicio')"><span class="ic">🏠</span>Início</button>
+  <button data-tab="pedido" onclick="goTab('pedido')"><span class="ic">📝</span>Fiado</button>
+  <button data-tab="clientes" onclick="goTab('clientes')"><span class="ic">👥</span>Clientes</button>
+  <button data-tab="produtos" onclick="goTab('produtos')"><span class="ic">🍽️</span>Produtos</button>
+  <button data-tab="calendario" onclick="goTab('calendario')"><span class="ic">📅</span>Calendário</button>
+  <button data-tab="cardapio" onclick="goTab('cardapio')"><span class="ic">📋</span>Cardápio</button>
+  <button data-tab="stats" onclick="goTab('stats')"><span class="ic">📊</span>Stats</button>
+  <button data-tab="atividade" onclick="goTab('atividade')"><span class="ic">🕒</span>Atividade</button>
+  <button data-tab="config" onclick="goTab('config')"><span class="ic">⚙️</span>Config</button>
+</nav>
+
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this) closeModal()">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="printArea"></div>
+
+<script>
+/* ---------- Estado & persistência ---------- */
+let DB = { products: [], clients: [], orders: [], activity: [], adjustments: [] };
+let calRef = new Date();
+let pedQtyMap = {}; // productId -> qty (para novo pedido)
+let pendingFiado = null; // {clientId, date, items} enquanto aguarda confirmação
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function brl(v){ return 'R$ ' + (v||0).toFixed(2).replace('.', ','); }
+function todayISO(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+const LS_KEY = 'dunnas_gerenciamento_v1';
+
+async function loadAll(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      DB.products = parsed.products || [];
+      DB.clients = parsed.clients || [];
+      DB.orders = parsed.orders || [];
+      DB.activity = parsed.activity || [];
+      DB.adjustments = parsed.adjustments || [];
+    }
+  }catch(e){
+    console.error('Erro ao carregar dados salvos:', e);
+    toast('Atenção: não consegui ler os dados salvos.');
+  }
+}
+function persist(){
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify(DB));
+    return true;
+  }catch(e){
+    console.error('Erro ao salvar:', e);
+    toast('Erro ao salvar! Espaço cheio ou navegador bloqueando.');
+    return false;
+  }
+}
+function logActivity(text, icon){
+  DB.activity.unshift({ id:uid(), ts:new Date().toISOString(), text, icon: icon||'•' });
+  if(DB.activity.length > 300) DB.activity.length = 300;
+  persist();
+}
+async function saveProducts(){ persist(); }
+async function saveClients(){ persist(); }
+async function saveOrders(){ persist(); }
+
+/* ---------- Backup manual (exportar / importar) ---------- */
+function buildBackupBlob(){
+  const data = JSON.stringify(DB, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const stamp = todayISO();
+  const timeStamp = new Date().toTimeString().slice(0,5).replace(':','h');
+  const filename = `dunnas-backup-${stamp}_${timeStamp}.json`;
+  return { blob, filename };
+}
+function exportBackup(){
+  const { blob, filename } = buildBackupBlob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  localStorage.setItem('dunnas_last_backup', todayISO());
+  localStorage.setItem('dunnas_last_backup_ts', new Date().toISOString());
+  toast('Backup baixado!');
+  renderBackupReminder();
+  logActivity('Backup exportado', '💾');
+}
+function renderBackupReminder(){
+  const el = document.getElementById('backupReminder');
+  if(!el) return;
+  const last = localStorage.getItem('dunnas_last_backup');
+  if(!last){
+    el.textContent = 'Você ainda não fez nenhum backup. Recomendo fazer um agora.';
+    el.style.color = 'var(--rust)';
+    return;
+  }
+  const days = Math.floor((new Date(todayISO()) - new Date(last)) / 86400000);
+  if(days >= 7){
+    el.textContent = `Último backup há ${days} dias. Considere exportar um novo.`;
+    el.style.color = 'var(--rust)';
+  } else {
+    el.textContent = `Último backup: ${fmtDate(last)} ✓`;
+    el.style.color = 'var(--paper-dim)';
+  }
+}
+function triggerImport(){ document.getElementById('importFileInput').click(); }
+function importBackup(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(e){
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(!parsed.products || !parsed.clients || !parsed.orders) throw new Error('formato inválido');
+      if(!confirm('Isso vai SUBSTITUIR todos os dados atuais pelos do backup. Continuar?')) return;
+      DB = { products: parsed.products, clients: parsed.clients, orders: parsed.orders, activity: parsed.activity || [], adjustments: parsed.adjustments || [] };
+      persist();
+      toast('Backup restaurado!');
+      logActivity('Backup restaurado a partir de arquivo', '📂');
+      renderInicio();
+      renderClientesLista();
+      renderProdutosLista();
+    }catch(err){
+      toast('Arquivo inválido — não consegui importar.');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+/* Atualiza carimbo de data sozinho, mesmo se o app ficar aberto passando da meia-noite */
+setInterval(()=>{
+  document.getElementById('dateStamp').textContent = fmtDate(todayISO());
+}, 60000);
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1700);
+}
+
+/* ---------- Navegação ---------- */
+function goTab(name){
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  if(name!=='pedido') document.getElementById('cartMiniBar').style.display = 'none';
+  if(name==='clientes') renderClientesLista();
+  if(name==='produtos') renderProdutosLista();
+  if(name==='pedido') renderPedidoForm();
+  if(name==='calendario') renderCalendario();
+  if(name==='stats') renderStats();
+  if(name==='atividade') renderAtividade();
+  if(name==='config') renderConfig();
+  if(name==='inicio') renderInicio();
+  window.scrollTo(0,0);
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('show'); }
+function openModal(html){
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modalBg').classList.add('show');
+}
+
+function buildClientStatementHtml(id){
+  const c = DB.clients.find(x=>x.id===id);
+  if(!c) return '';
+  const debt = clientDebt(id);
+  const orders = allOrdersFor(id);
+  const adjustments = clientAdjustments(id);
+  let entries = [];
+  orders.forEach(o=>entries.push({date:o.date, type:'order', data:o}));
+  adjustments.forEach(a=>entries.push({date:a.date, type:'adj', data:a}));
+  entries.sort((a,b)=> a.date<b.date?1:-1);
+  let html = `<div class="menu-sheet" id="clientStatementSheet">
+    <h2>${escapeHtml(c.name)}</h2>
+    <div style="text-align:center; font-size:.72rem; color:#888; margin-bottom:12px;">Extrato gerado em ${fmtDate(todayISO())} · Dunnas Alimentação Corporativa</div>
+    <div style="text-align:center; margin:10px 0 18px;">
+      <div style="font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:#888;">Total em aberto</div>
+      <div style="font-size:1.9rem; font-weight:700; color:${debt>0?'#a54a2a':'#5c6b3f'};">${brl(debt)}</div>
+    </div>
+    <div class="menu-cat" style="color:#5c6b3f;">Histórico detalhado</div>`;
+  if(!entries.length){
+    html += '<div style="text-align:center; color:#999; font-style:italic; padding:16px 4px;">Nenhum registro ainda.</div>';
+  } else {
+    entries.forEach(e=>{
+      if(e.type==='order'){
+        const o = e.data;
+        const soma = o.items.reduce((s,it)=>s+it.price*it.qty,0);
+        html += `<div style="margin-top:12px; font-weight:700; font-family:Georgia,serif; color:#333;">${fmtDate(o.date)} <span style="float:right;">${brl(soma)}</span></div>`;
+        o.items.forEach(it=>{
+          html += `<div class="menu-item" style="font-size:.85rem; opacity:${it.paid?0.5:1};"><span>${it.qty}x ${escapeHtml(it.name)}${it.paid?' (pago)':''}</span><span class="dots"></span><span>${brl(it.price*it.qty)}</span></div>`;
+        });
+      } else {
+        const a = e.data;
+        html += `<div class="menu-item" style="font-size:.85rem; margin-top:10px;"><span>${fmtDate(a.date)} — ${a.type==='debit'?'Valor adicionado à conta':'Pagamento recebido'}${a.note?': '+escapeHtml(a.note):''}</span><span class="dots"></span><span>${a.type==='debit'?'+':'−'}${brl(a.amount)}</span></div>`;
+      }
+    });
+  }
+  html += '</div>';
+  return html;
+}
+function abrirExtratoCliente(id){
+  const html = buildClientStatementHtml(id);
+  if(!html){ toast('Cliente não encontrado'); return; }
+  openFullscreenView(`
+    <div class="row" style="margin-bottom:12px;">
+      <button class="btn-ghost" onclick="downloadStatementImage('${id}')">⬇ Baixar imagem</button>
+      <button class="btn-main" style="margin-top:0;" onclick="shareStatementImage('${id}')">📤 Compartilhar</button>
+    </div>
+    ${html}
+  `);
+}
+function downloadStatementImage(id){
+  const el = document.getElementById('clientStatementSheet');
+  if(!el || typeof html2canvas === 'undefined'){ toast('Sem conexão pra gerar imagem agora.'); return; }
+  toast('Gerando imagem...');
+  html2canvas(el, {backgroundColor:'#f2e9d8', scale:2}).then(canvas=>{
+    canvas.toBlob(blob=>{
+      const c = DB.clients.find(x=>x.id===id);
+      downloadBlobFile(blob, `extrato-${(c?c.name:'cliente').replace(/\s+/g,'-')}-${todayISO()}.png`);
+      toast('Imagem baixada!');
+    });
+  }).catch(err=>{ console.error(err); toast('Erro ao gerar imagem'); });
+}
+function shareStatementImage(id){
+  const el = document.getElementById('clientStatementSheet');
+  if(!el || typeof html2canvas === 'undefined'){ toast('Sem conexão pra gerar imagem agora.'); return; }
+  toast('Gerando imagem...');
+  html2canvas(el, {backgroundColor:'#f2e9d8', scale:2}).then(canvas=>{
+    canvas.toBlob(async (blob)=>{
+      const c = DB.clients.find(x=>x.id===id);
+      const filename = `extrato-${(c?c.name:'cliente').replace(/\s+/g,'-')}.png`;
+      try{
+        const file = new File([blob], filename, {type:'image/png'});
+        if(navigator.canShare && navigator.canShare({files:[file]})){
+          await navigator.share({files:[file], title:'Extrato de fiado', text:`Extrato de ${c?c.name:'cliente'} — Dunnas`});
+          return;
+        }
+      }catch(err){ /* usuário cancelou o compartilhamento, sem problema */ return; }
+      downloadBlobFile(blob, filename);
+      toast('Compartilhamento direto não disponível nesse navegador — imagem baixada pra enviar manualmente.');
+    });
+  }).catch(err=>{ console.error(err); toast('Erro ao gerar imagem'); });
+}
+
+/* ---------- Cálculos de dívida ---------- */
+function clientDebt(clientId){
+  let total = 0;
+  DB.orders.forEach(o=>{
+    if(o.clientId!==clientId) return;
+    o.items.forEach(it=>{ if(!it.paid) total += it.price*it.qty; });
+  });
+  DB.adjustments.forEach(a=>{
+    if(a.clientId!==clientId) return;
+    total += (a.type==='debit' ? a.amount : -a.amount);
+  });
+  return total;
+}
+function clientAdjustments(clientId){
+  return DB.adjustments.filter(a=>a.clientId===clientId).sort((a,b)=> a.date<b.date?1:-1);
+}
+function allOrdersFor(clientId){
+  return DB.orders.filter(o=>o.clientId===clientId).sort((a,b)=> a.date<b.date?1:-1);
+}
+
+/* ---------- INÍCIO ---------- */
+function renderInicio(){
+  const total = DB.clients.reduce((s,c)=>s+clientDebt(c.id),0);
+  document.getElementById('sumTotalDevido').textContent = brl(total);
+  const devendo = DB.clients.filter(c=>clientDebt(c.id)>0).length;
+  document.getElementById('sumClientesDevendo').textContent = devendo;
+
+  const hoje = todayISO();
+  let vendHoje = 0, vendMes = 0;
+  const mesRef = hoje.slice(0,7);
+  DB.orders.forEach(o=>{
+    const soma = o.items.reduce((s,it)=>s+it.price*it.qty,0);
+    if(o.date===hoje) vendHoje += soma;
+    if(o.date.slice(0,7)===mesRef) vendMes += soma;
+  });
+  document.getElementById('sumHoje').textContent = brl(vendHoje);
+  document.getElementById('sumMes').textContent = brl(vendMes);
+
+  const ranked = DB.clients.map(c=>({c, d:clientDebt(c.id)})).filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5);
+  const box = document.getElementById('topDevedores');
+  box.innerHTML = ranked.length ? ranked.map(x=>`
+    <div class="list-item">
+      <span class="name">${escapeHtml(x.c.name)}</span>
+      <span class="money owe">${brl(x.d)}</span>
+    </div>`).join('') : '<div class="empty">Ninguém deve nada no momento 🎉</div>';
+  renderAtividadePreview();
+}
+
+/* ---------- Máscara de moeda ---------- */
+function maskCurrencyInput(el){
+  let digits = el.value.replace(/\D/g,'');
+  if(!digits) digits = '0';
+  while(digits.length<3) digits = '0'+digits;
+  digits = digits.replace(/^0+(?=\d{3,})/,'');
+  const cents = digits.slice(-2);
+  let reais = digits.slice(0,-2).replace(/^0+(?=\d)/,'');
+  if(!reais) reais = '0';
+  reais = reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  el.value = reais+','+cents;
+  el.dataset.value = (parseInt(digits,10)/100).toFixed(2);
+}
+function getCurrencyValue(el){
+  if(el.dataset.value) return parseFloat(el.dataset.value);
+  return parseFloat((el.value||'0').replace(/\./g,'').replace(',','.')) || 0;
+}
+function onCatSelectChange(){
+  const sel = document.getElementById('novoProdCatSelect');
+  document.getElementById('novoProdCatCustom').style.display = sel.value==='__custom__' ? 'block' : 'none';
+}
+
+const DEFAULT_PRODUCTS = [{"name": "Cuscuz com Manteiga", "price": 4.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo", "price": 5.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Presunto e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Cuscuz"}, {"name": "Tapioca Simples", "price": 3.0, "cat": "Tapiocas"}, {"name": "Tapioca com Presunto e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo", "price": 5.0, "cat": "Tapiocas"}, {"name": "Tapioca com Queijo", "price": 6.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Fatia de Bolo", "price": 4.0, "cat": "Diversos"}, {"name": "Hot Dog", "price": 7.0, "cat": "Diversos"}, {"name": "Salgados", "price": 5.0, "cat": "Diversos"}, {"name": "Almoço Pequeno (1 guarnição)", "price": 13.0, "cat": "Almoço"}, {"name": "Almoço Grande (2 guarnições)", "price": 18.0, "cat": "Almoço"}, {"name": "Hambúrguer (pão, carne, alface e tomate)", "price": 10.0, "cat": "Sanduíches"}, {"name": "X-Burguer (pão, carne, queijo, alface e tomate)", "price": 11.0, "cat": "Sanduíches"}, {"name": "Bauru (pão, carne, queijo, ovo, alface e tomate)", "price": 12.0, "cat": "Sanduíches"}, {"name": "X-Tudo (pão, carne, queijo, presunto, ovo, alface e tomate)", "price": 15.0, "cat": "Sanduíches"}, {"name": "X-Egg (pão, ovo e queijo)", "price": 7.0, "cat": "Sanduíches"}, {"name": "Misto (pão, queijo e presunto)", "price": 8.0, "cat": "Sanduíches"}, {"name": "Pão com Ovo (pão e ovo)", "price": 5.0, "cat": "Sanduíches"}, {"name": "Pão na Chapa (pão com manteiga)", "price": 3.0, "cat": "Sanduíches"}, {"name": "Queijo Quente (pão e queijo)", "price": 6.0, "cat": "Sanduíches"}, {"name": "Café Pequeno", "price": 2.0, "cat": "Bebidas"}, {"name": "Café Grande", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Pequeno", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Grande", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante 250ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante Lata", "price": 5.5, "cat": "Bebidas"}, {"name": "Refrigerante 600ml", "price": 6.0, "cat": "Bebidas"}, {"name": "Refrigerante 1L", "price": 8.0, "cat": "Bebidas"}, {"name": "Refrigerante 2L", "price": 13.0, "cat": "Bebidas"}, {"name": "Nescau", "price": 3.5, "cat": "Bebidas"}, {"name": "Tampico 300ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Água 500ml", "price": 2.5, "cat": "Bebidas"}, {"name": "Água com Gás", "price": 3.5, "cat": "Bebidas"}, {"name": "Vitamina de Manga", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Acerola", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Goiaba", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Cajá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Maracujá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Ameixa", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Morango", "price": 8.0, "cat": "Vitaminas"}, {"name": "Vitamina com Pó de Guaraná", "price": 8.0, "cat": "Vitaminas"}, {"name": "Açaí com Banana", "price": 10.0, "cat": "Vitaminas"}, {"name": "Copo de Suco 150ml", "price": 2.0, "cat": "Sucos"}, {"name": "Copo de Suco 300ml", "price": 3.0, "cat": "Sucos"}];
+function loadDefaultProducts(){
+  if(!confirm(`Isso vai adicionar os ${DEFAULT_PRODUCTS.length} produtos padrão do cardápio da Dunnas (cuscuz, tapiocas, sanduíches, bebidas, vitaminas, sucos e almoço).\n\nSe algum produto já existir com o mesmo nome, o preço dele será atualizado pro valor padrão. Produtos que você já tem com outros nomes não são afetados. Clientes e fiados não são alterados.\n\nContinuar?`)) return;
+  const { added, updated } = upsertProductsList(DEFAULT_PRODUCTS);
+  logActivity(`Produtos padrão habilitados: ${added} novo(s), ${updated} atualizado(s)`, '⭐');
+  toast(`${added} produto(s) novo(s), ${updated} atualizado(s)`);
+  renderProdutosLista();
+}
+
+const DEFAULT_CLIENTS = ["Alexandre Lava-Jato", "Alexsandro Vendedor (Alê)", "Anízia", "Arcádia", "Bianca", "Camila", "Carol", "Cássia", "César", "Gabriela", "Geovana", "Gleison", "Gustavo", "Halison", "Honorato", "Jardel", "Jenifer", "João Victor", "Letícia", "Lorena", "Lívia", "Manuel", "Marcelo", "Meire", "Mirela", "Mônica", "Natália", "Nilson", "Raquel", "Ricardo", "Sandra", "Sarah", "Seu Edilson", "Vanessa", "Victor", "Wedson", "Wilker Lima", "Wilkie Mendes", "Ítalo"];
+function loadDefaultClients(){
+  if(!confirm(`Isso vai cadastrar os ${DEFAULT_CLIENTS.length} clientes da sua lista, todos com conta zerada.\n\nQuem já existir com o mesmo nome é ignorado (não duplica, não mexe na dívida de quem já tem). Produtos e pedidos não são afetados.\n\nContinuar?`)) return;
+  const existentes = new Set(DB.clients.map(c=>c.name.trim().toLowerCase()));
+  let added = 0;
+  DEFAULT_CLIENTS.forEach(nome=>{
+    const key = nome.trim().toLowerCase();
+    if(existentes.has(key)) return;
+    DB.clients.push({ id:uid(), name:nome });
+    existentes.add(key);
+    added++;
+  });
+  persist();
+  logActivity(`Clientes padrão habilitados: ${added} novo(s)`, '⭐');
+  toast(added ? `${added} cliente(s) adicionado(s)` : 'Todos já estavam cadastrados');
+  renderClientesLista();
+  renderInicio();
+}
+
+function upsertProductsList(list){
+  const byName = new Map(DB.products.map(p=>[p.name.trim().toLowerCase(), p]));
+  let added = 0, updated = 0;
+  list.forEach(item=>{
+    if(!item.name || typeof item.price !== 'number') return;
+    const key = item.name.trim().toLowerCase();
+    const existing = byName.get(key);
+    if(existing){
+      if(existing.price !== item.price || (item.cat && existing.cat !== item.cat)){
+        existing.price = item.price;
+        if(item.cat) existing.cat = item.cat;
+        if(item.desc !== undefined) existing.desc = item.desc;
+        updated++;
+      }
+    } else {
+      const novo = { id:uid(), name:item.name.trim(), price:item.price, cat:item.cat||'Outros', desc:item.desc||'' };
+      DB.products.push(novo);
+      byName.set(key, novo);
+      added++;
+    }
+  });
+  persist();
+  return { added, updated };
+}
+function triggerImportProducts(){ document.getElementById('importProductsInput').click(); }
+function importProducts(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const parsed = JSON.parse(e.target.result);
+      const list = Array.isArray(parsed) ? parsed : parsed.products;
+      if(!Array.isArray(list)) throw new Error('formato inválido');
+      const { added, updated } = upsertProductsList(list);
+      logActivity(`Importação de produtos: ${added} novo(s), ${updated} atualizado(s)`, '📋');
+      toast(`${added} produto(s) novo(s), ${updated} atualizado(s)`);
+      renderProdutosLista();
+    }catch(err){
+      toast('Arquivo inválido — não consegui importar.');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+/* ---------- PRODUTOS ---------- */
+async function addProduto(){
+  const nome = document.getElementById('novoProdNome').value.trim();
+  const precoInput = document.getElementById('novoProdPreco');
+  const preco = getCurrencyValue(precoInput);
+  const catSel = document.getElementById('novoProdCatSelect');
+  const catCustom = document.getElementById('novoProdCatCustom');
+  const descInput = document.getElementById('novoProdDesc');
+  const desc = descInput.value.trim();
+  let cat = catSel.value === '__custom__' ? (catCustom.value.trim() || 'Outros') : catSel.value;
+  if(!nome || isNaN(preco) || preco<=0){ toast('Preencha nome e preço válidos'); return; }
+  DB.products.push({id:uid(), name:nome, price:preco, cat, desc});
+  await saveProducts();
+  logActivity(`Produto cadastrado: ${nome} (${brl(preco)})`, '🍽️');
+  document.getElementById('novoProdNome').value='';
+  precoInput.value=''; precoInput.dataset.value='0';
+  catSel.value='Sanduíches';
+  catCustom.value=''; catCustom.style.display='none';
+  descInput.value='';
+  toast('Produto adicionado');
+  renderProdutosLista();
+}
+async function removerProduto(id){
+  if(!confirm('Remover este produto? O histórico de pedidos antigos com ele é mantido.')) return;
+  const p = DB.products.find(x=>x.id===id);
+  DB.products = DB.products.filter(p=>p.id!==id);
+  await saveProducts();
+  if(p) logActivity(`Produto removido: ${p.name}`, '🗑️');
+  renderProdutosLista();
+}
+function renderProdutosLista(){
+  const box = document.getElementById('listaProdutos');
+  if(!DB.products.length){ box.innerHTML = '<div class="empty">Nenhum produto cadastrado ainda.</div>'; return; }
+  const byCat = {};
+  DB.products.forEach(p=>{ (byCat[p.cat||'Outros'] = byCat[p.cat||'Outros']||[]).push(p); });
+  const catsPresent = Object.keys(byCat);
+  const orderedCats = CATEGORY_ORDER.filter(c=>catsPresent.includes(c))
+    .concat(catsPresent.filter(c=>!CATEGORY_ORDER.includes(c)).sort());
+  let html = '';
+  orderedCats.forEach(cat=>{
+    html += `<div class="tag" style="margin:16px 0 8px;">${escapeHtml(cat)}</div>`;
+    byCat[cat].forEach(p=>{
+      html += `<div class="list-item">
+        <span>
+          <span class="name" style="display:block;">${escapeHtml(p.name)}</span>
+          ${p.desc?`<span class="meta">${escapeHtml(p.desc)}</span>`:''}
+        </span>
+        <span style="display:flex; align-items:center; gap:10px;">
+          <span class="money">${brl(p.price)}</span>
+          <button class="btn-danger btn-small" onclick="removerProduto('${p.id}')">remover</button>
+        </span>
+      </div>`;
+    });
+  });
+  box.innerHTML = html;
+}
+
+/* ---------- CLIENTES ---------- */
+async function addCliente(){
+  const nome = document.getElementById('novoClienteNome').value.trim();
+  if(!nome){ toast('Digite um nome'); return; }
+  DB.clients.push({id:uid(), name:nome});
+  await saveClients();
+  logActivity(`Cliente cadastrado: ${nome}`, '👤');
+  document.getElementById('novoClienteNome').value='';
+  toast('Cliente adicionado');
+  renderClientesLista();
+}
+async function resetarTudo(){
+  try{
+    const totalClientes = DB.clients.length;
+    const totalProdutos = DB.products.length;
+    const totalPedidos = DB.orders.length;
+    const totalDevido = DB.clients.reduce((s,c)=>s+clientDebt(c.id),0);
+    if(!confirm(`⚠️ ISSO APAGA TUDO ⚠️\n\n${totalClientes} cliente(s)\n${totalProdutos} produto(s)\n${totalPedidos} pedido(s) registrado(s)\n${totalDevido>0?`${brl(totalDevido)} em dívidas ainda abertas\n`:''}\nNÃO PODE SER DESFEITO. Recomendo fazer backup antes.\n\nToque OK só se tiver certeza absoluta.`)) return;
+    const resp = prompt('Pra confirmar de vez, digite RESETAR (em maiúsculas):');
+    if(resp === null) return;
+    if(resp.trim() !== 'RESETAR'){ toast('Texto não conferiu — nada foi apagado'); return; }
+    DB = { products: [], clients: [], orders: [], activity: [], adjustments: [] };
+    const ok = persist();
+    if(!ok){ toast('Erro ao resetar!'); return; }
+    toast('App resetado — tudo limpo');
+    renderInicio();
+    renderClientesLista();
+    renderProdutosLista();
+    renderConfig();
+  }catch(err){
+    console.error('Erro ao resetar app:', err);
+    toast('Erro inesperado — veja o console');
+  }
+}
+async function removerCliente(id){
+  try{
+    const c = DB.clients.find(x=>x.id===id);
+    if(!c){ toast('Cliente não encontrado — pode ser cache antigo, tente reinstalar o app'); return; }
+    const debt = clientDebt(id);
+    const ordersCount = DB.orders.filter(o=>o.clientId===id).length;
+    const adjCount = DB.adjustments.filter(a=>a.clientId===id).length;
+    const warn = `⚠️ ATENÇÃO — AÇÃO PERMANENTE ⚠️\n\nIsso vai apagar "${c.name}" e TODO o histórico dele:\n• ${ordersCount} fiado(s) registrado(s)\n• ${adjCount} ajuste(s) manual(is)\n${debt>0?`• Dívida em aberto de ${brl(debt)}\n`:''}\nIsso NÃO PODE SER DESFEITO.\n\nToque OK pra continuar.`;
+    if(!confirm(warn)) return;
+    if(!confirm(`Tem certeza mesmo? Vai apagar "${c.name}" e todo o histórico dele PRA SEMPRE.`)) return;
+    DB.clients = DB.clients.filter(x=>x.id!==id);
+    DB.orders = DB.orders.filter(o=>o.clientId!==id);
+    DB.adjustments = DB.adjustments.filter(a=>a.clientId!==id);
+    const ok = persist();
+    if(!ok){ toast('Erro ao salvar a remoção!'); return; }
+    logActivity(`Cliente e todo histórico apagados: ${c.name} (${ordersCount} fiado(s), ${adjCount} ajuste(s))`, '🗑️');
+    toast('Cliente removido');
+    closeModal();
+    renderClientesLista();
+    renderInicio();
+  }catch(err){
+    console.error('Erro ao remover cliente:', err);
+    toast('Erro inesperado ao remover — veja o console');
+  }
+}
+function renderClientesLista(filter){
+  const box = document.getElementById('listaClientes');
+  let list = DB.clients.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  if(filter) list = list.filter(c=>c.name.toLowerCase().includes(filter.toLowerCase()));
+  if(!list.length){ box.innerHTML = '<div class="empty">Nenhum cliente encontrado.</div>'; return; }
+  box.innerHTML = list.map(c=>{
+    const d = clientDebt(c.id);
+    return `<div class="client-card" onclick="abrirCliente('${c.id}')">
+      <span class="cname">${escapeHtml(c.name)}</span>
+      <span class="cdebt ${d>0?'money owe':'money'}">${d>0?brl(d):'em dia'}</span>
+    </div>`;
+  }).join('');
+}
+
+function abrirCliente(id){
+  const c = DB.clients.find(x=>x.id===id);
+  if(!c) return;
+  const orders = allOrdersFor(id);
+  const adjustments = clientAdjustments(id);
+  const debt = clientDebt(id);
+  let body = `<button class="modal-close" onclick="closeModal()">✕</button>
+    <h2>${escapeHtml(c.name)}</h2>
+    <div class="list-item"><span>Total em aberto</span><span class="money owe" style="font-size:1.3rem;">${brl(debt)}</span></div>
+    <div class="row">
+      <button class="btn-main" style="margin-top:0;" onclick="abrirExtratoCliente('${id}')">📄 Extrato completo</button>
+      ${debt>0?`<button class="btn-main" style="margin-top:0; background:var(--olive);" onclick="zerarContaCliente('${id}')">💰 Zerar conta</button>`:''}
+    </div>
+    <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="limparHistoricoCliente('${id}')">🧹 Limpar histórico (manter cliente)</button>
+    <button class="btn-danger" style="width:100%; margin:8px 0 4px;" onclick="removerCliente('${id}')">🗑️ Remover cliente e apagar histórico</button>
+
+    <div class="card" style="margin:12px 0;">
+      <h3 style="color:var(--mustard-light); font-size:.9rem; margin-bottom:8px;">Ajuste manual</h3>
+      <p style="font-size:.72rem; color:var(--paper-dim); margin:0 0 8px;">Pra registrar um valor que aumenta ou reduz a conta sem estar ligado a um produto específico — como uma dívida de antes de usar o app, ou um pagamento parcial que ela fez.</p>
+      <label>Tipo</label>
+      <select id="adjType">
+        <option value="debit">Valor adicionado à conta (aumenta o que ele deve)</option>
+        <option value="credit">Pagamento recebido (abate o que ele deve)</option>
+      </select>
+      <label>Valor (R$)</label>
+      <input type="text" inputmode="numeric" id="adjAmount" placeholder="0,00" oninput="maskCurrencyInput(this)">
+      <label>Observação (opcional)</label>
+      <input id="adjNote" placeholder="Ex: dívida de antes de usar o app">
+      <label>Data</label>
+      <input type="date" id="adjDate" value="${todayISO()}">
+      <button class="btn-main" onclick="addAdjustment('${id}')">Adicionar ajuste</button>
+    </div>
+
+    <h3 style="margin-top:10px; color:var(--mustard-light); font-size:.9rem;">Histórico de ajustes</h3>
+    <div style="margin-bottom:10px;">`;
+  if(!adjustments.length){
+    body += '<div class="empty">Nenhum ajuste manual registrado.</div>';
+  } else {
+    adjustments.forEach(a=>{
+      body += `<div class="list-item">
+        <span>${fmtDate(a.date)} · ${a.type==='debit'?'Valor adicionado à conta':'Pagamento recebido'}${a.note?': '+escapeHtml(a.note):''}</span>
+        <span style="display:flex; align-items:center; gap:8px;">
+          <span class="money ${a.type==='debit'?'owe':''}">${a.type==='debit'?'+':'−'}${brl(a.amount)}</span>
+          <button class="btn-danger btn-small" onclick="removeAdjustment('${a.id}')">remover</button>
+        </span>
+      </div>`;
+    });
+  }
+  body += `</div>
+
+    <div style="max-height:50vh; overflow-y:auto; margin-top:10px;">`;
+  if(!orders.length){
+    body += '<div class="empty">Sem pedidos registrados.</div>';
+  } else {
+    orders.forEach(o=>{
+      const somaAberta = o.items.filter(it=>!it.paid).reduce((s,it)=>s+it.price*it.qty,0);
+      body += `<div class="card" style="margin-bottom:8px;">
+        <div class="list-item" style="border:none;"><span class="tag">${fmtDate(o.date)}</span><span class="money">${brl(o.items.reduce((s,it)=>s+it.price*it.qty,0))}</span></div>`;
+      o.items.forEach(it=>{
+        body += `<div class="list-item" style="opacity:${it.paid?0.45:1};">
+          <span>${it.qty}x ${escapeHtml(it.name)} ${it.paid?'<span class=\"tag\" style=\"background:var(--rust);\">pago</span>':''}</span>
+          <span style="display:flex; align-items:center; gap:8px;">
+            <span class="money">${brl(it.price*it.qty)}</span>
+            <button class="btn-small ${it.paid?'btn-ghost':'btn-main'}" style="width:auto; margin:0; padding:4px 8px;" onclick="toggleItemPago('${o.id}','${it.id}')">${it.paid?'desfazer':'quitar'}</button>
+          </span>
+        </div>`;
+      });
+      const temAberto = o.items.some(it=>!it.paid);
+      body += `<div style="display:flex; gap:6px; margin-top:6px;">
+        ${temAberto?`<button class="btn-main btn-small" style="width:auto; margin:0;" onclick="quitarPedidoInteiro('${o.id}')">✅ Quitar tudo desse dia</button>`:''}
+        <button class="btn-danger btn-small" onclick="removerPedido('${o.id}')">Excluir pedido inteiro</button>
+      </div></div>`;
+    });
+  }
+  body += '</div>';
+  openModal(body);
+}
+
+async function addAdjustment(clientId){
+  const type = document.getElementById('adjType').value;
+  const amountInput = document.getElementById('adjAmount');
+  const amount = getCurrencyValue(amountInput);
+  const note = document.getElementById('adjNote').value.trim();
+  const date = document.getElementById('adjDate').value || todayISO();
+  if(isNaN(amount) || amount<=0){ toast('Informe um valor válido'); return; }
+  const oldTotal = clientDebt(clientId);
+  DB.adjustments.push({ id:uid(), clientId, type, amount, note, date });
+  persist();
+  const cli = DB.clients.find(x=>x.id===clientId);
+  const newTotal = clientDebt(clientId);
+  logActivity(`${type==='debit'?'Valor adicionado à conta':'Pagamento recebido'} de ${cli?cli.name:'cliente'}: ${brl(amount)}${note?' — '+note:''}`, type==='debit'?'➕':'➖');
+  const label = type==='debit' ? `+ ${brl(amount)} adicionado à conta` : `− ${brl(amount)} de pagamento recebido`;
+  showAccountChangeAnim(cli?cli.name:'Cliente', oldTotal, newTotal, label, type==='debit');
+  abrirCliente(clientId);
+  renderClientesLista();
+  renderInicio();
+}
+async function removeAdjustment(id){
+  try{
+    if(!confirm('Remover este ajuste do histórico?')) return;
+    const adj = DB.adjustments.find(x=>x.id===id);
+    if(!adj){ toast('Ajuste não encontrado — pode ser cache antigo, tente reinstalar o app'); return; }
+    const clientId = adj.clientId;
+    const cli = DB.clients.find(x=>x.id===clientId);
+    DB.adjustments = DB.adjustments.filter(x=>x.id!==id);
+    const ok = persist();
+    if(!ok){ toast('Erro ao salvar a remoção!'); return; }
+    logActivity(`Ajuste removido de ${cli?cli.name:'cliente'}: ${brl(adj.amount)}`, '🗑️');
+    toast('Ajuste removido');
+    if(clientId) abrirCliente(clientId);
+    renderClientesLista();
+    renderInicio();
+  }catch(err){
+    console.error('Erro ao remover ajuste:', err);
+    toast('Erro inesperado ao remover — veja o console');
+  }
+}
+
+async function quitarPedidoInteiro(orderId){
+  try{
+    const o = DB.orders.find(x=>x.id===orderId);
+    if(!o){ toast('Pedido não encontrado — pode ser cache antigo, tente reinstalar o app'); return; }
+    const itensAbertos = o.items.filter(it=>!it.paid);
+    if(!itensAbertos.length){ toast('Esse dia já está todo quitado'); return; }
+    const clientId = o.clientId;
+    const cli = DB.clients.find(x=>x.id===clientId);
+    const oldTotal = clientDebt(clientId);
+    const totalDoDia = itensAbertos.reduce((s,it)=>s+it.price*it.qty,0);
+    if(!confirm(`Marcar todos os ${itensAbertos.length} item(ns) de ${fmtDate(o.date)} (${brl(totalDoDia)}) como pagos?`)) return;
+    o.items.forEach(it=>{ it.paid = true; });
+    const ok = persist();
+    if(!ok){ toast('Erro ao salvar!'); return; }
+    const newTotal = clientDebt(clientId);
+    logActivity(`Dia inteiro quitado: ${fmtDate(o.date)} de ${cli?cli.name:'cliente'} (${brl(totalDoDia)})`, '✅');
+    showAccountChangeAnim(cli?cli.name:'Cliente', oldTotal, newTotal, `− ${brl(totalDoDia)} (dia ${fmtDate(o.date)} quitado)`, false);
+    abrirCliente(clientId);
+    renderClientesLista();
+    renderInicio();
+  }catch(err){
+    console.error('Erro ao quitar pedido:', err);
+    toast('Erro inesperado — veja o console');
+  }
+}
+async function zerarContaCliente(clientId){
+  try{
+    const cli = DB.clients.find(x=>x.id===clientId);
+    if(!cli){ toast('Cliente não encontrado'); return; }
+    const oldTotal = clientDebt(clientId);
+    if(oldTotal<=0){ toast('Essa conta já está zerada'); return; }
+    if(!confirm(`Marcar TODA a conta de ${cli.name} como paga?\n\nValor atual: ${brl(oldTotal)}\n\nIsso vai quitar todos os produtos em aberto e neutralizar qualquer valor pendente de ajuste manual. O histórico não é apagado, só marcado como pago.`)) return;
+    if(!confirm(`Confirma mesmo? ${cli.name} pagou os ${brl(oldTotal)} que devia?`)) return;
+    DB.orders.filter(o=>o.clientId===clientId).forEach(o=>{
+      o.items.forEach(it=>{ it.paid = true; });
+    });
+    const restante = clientDebt(clientId);
+    if(restante > 0.004){
+      DB.adjustments.push({ id:uid(), clientId, type:'credit', amount:restante, note:'Quitação total da conta', date:todayISO() });
+    }
+    const ok = persist();
+    if(!ok){ toast('Erro ao salvar!'); return; }
+    const newTotal = clientDebt(clientId);
+    logActivity(`Conta zerada: ${cli.name} (${brl(oldTotal)})`, '💰');
+    showAccountChangeAnim(cli.name, oldTotal, newTotal, `− ${brl(oldTotal)} (conta zerada)`, false);
+    abrirCliente(clientId);
+    renderClientesLista();
+    renderInicio();
+  }catch(err){
+    console.error('Erro ao zerar conta:', err);
+    toast('Erro inesperado — veja o console');
+  }
+}
+async function limparHistoricoCliente(clientId){
+  try{
+    const cli = DB.clients.find(x=>x.id===clientId);
+    if(!cli){ toast('Cliente não encontrado'); return; }
+    const ordersCount = DB.orders.filter(o=>o.clientId===clientId).length;
+    const adjCount = DB.adjustments.filter(a=>a.clientId===clientId).length;
+    if(!ordersCount && !adjCount){ toast('Não tem histórico pra limpar'); return; }
+    const debt = clientDebt(clientId);
+    if(debt > 0.004){
+      toast(`${cli.name} ainda deve ${brl(debt)} — quite ou zere a conta antes de limpar o histórico`);
+      return;
+    }
+    if(!confirm(`Apagar todo o histórico de pedidos e ajustes de ${cli.name}? O cliente continua cadastrado, só o histórico antigo some. Essa ação não pode ser desfeita.`)) return;
+    DB.orders = DB.orders.filter(o=>o.clientId!==clientId);
+    DB.adjustments = DB.adjustments.filter(a=>a.clientId!==clientId);
+    const ok = persist();
+    if(!ok){ toast('Erro ao salvar!'); return; }
+    logActivity(`Histórico limpo: ${cli.name} (${ordersCount} pedido(s), ${adjCount} ajuste(s) removidos)`, '🧹');
+    toast('Histórico limpo!');
+    abrirCliente(clientId);
+    renderClientesLista();
+  }catch(err){
+    console.error('Erro ao limpar histórico:', err);
+    toast('Erro inesperado — veja o console');
+  }
+}
+async function toggleItemPago(orderId, itemId){
+  const o = DB.orders.find(x=>x.id===orderId);
+  if(!o) return;
+  const it = o.items.find(x=>x.id===itemId);
+  if(!it) return;
+  const clientId = o.clientId;
+  const oldTotal = clientDebt(clientId);
+  it.paid = !it.paid;
+  await saveOrders();
+  const cli = DB.clients.find(x=>x.id===clientId);
+  const newTotal = clientDebt(clientId);
+  logActivity(`${it.paid?'Quitado':'Reaberto'}: ${it.qty}x ${it.name} de ${cli?cli.name:'cliente'}`, it.paid?'✅':'↩️');
+  const itemTotal = it.price*it.qty;
+  const label = it.paid ? `− ${brl(itemTotal)} (${it.name} quitado)` : `+ ${brl(itemTotal)} (${it.name} reaberto)`;
+  showAccountChangeAnim(cli?cli.name:'Cliente', oldTotal, newTotal, label, !it.paid);
+  abrirCliente(clientId);
+  renderClientesLista();
+  renderInicio();
+}
+async function removerPedido(orderId){
+  try{
+    if(!confirm('Excluir este pedido inteiro? Essa ação não pode ser desfeita.')) return;
+    const o = DB.orders.find(x=>x.id===orderId);
+    if(!o){ toast('Pedido não encontrado — pode ser cache antigo, tente reinstalar o app'); return; }
+    const clientId = o.clientId;
+    const cli = DB.clients.find(x=>x.id===clientId);
+    DB.orders = DB.orders.filter(x=>x.id!==orderId);
+    const ok = persist();
+    if(!ok){ toast('Erro ao salvar a exclusão!'); return; }
+    logActivity(`Pedido de ${cli?cli.name:'cliente'} do dia ${fmtDate(o.date)} foi excluído`, '🗑️');
+    toast('Pedido excluído');
+    if(clientId) abrirCliente(clientId);
+    renderClientesLista();
+    renderInicio();
+  }catch(err){
+    console.error('Erro ao excluir pedido:', err);
+    toast('Erro inesperado ao excluir — veja o console');
+  }
+}
+
+/* ---------- NOVO PEDIDO ---------- */
+const CATEGORY_ORDER = ['Sanduíches','Cuscuz','Tapiocas','Diversos','Vitaminas','Sucos','Bebidas'];
+function renderPedidoForm(){
+  const sel = document.getElementById('pedCliente');
+  sel.innerHTML = DB.clients.slice().sort((a,b)=>a.name.localeCompare(b.name))
+    .map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('') || '<option value="">— cadastre um cliente primeiro —</option>';
+  document.getElementById('pedData').value = todayISO();
+  pedQtyMap = {};
+  document.getElementById('pedProdutoSearch').value = '';
+  renderProdutoChips('');
+  renderQtyArea();
+}
+function renderProdutoChips(filter){
+  const chipBox = document.getElementById('pedProdutos');
+  if(!DB.products.length){
+    chipBox.innerHTML = '<div class="empty">Cadastre produtos primeiro na aba Produtos.</div>';
+    return;
+  }
+  const term = (filter||'').toLowerCase();
+  const filtered = DB.products.filter(p=>p.name.toLowerCase().includes(term));
+  const byCat = {};
+  filtered.forEach(p=>{ (byCat[p.cat||'Outros'] = byCat[p.cat||'Outros']||[]).push(p); });
+  const catsPresent = Object.keys(byCat);
+  const orderedCats = CATEGORY_ORDER.filter(c=>catsPresent.includes(c))
+    .concat(catsPresent.filter(c=>!CATEGORY_ORDER.includes(c)).sort());
+  if(!orderedCats.length){
+    chipBox.innerHTML = '<div class="empty">Nenhum produto encontrado.</div>';
+    return;
+  }
+  let html = '';
+  orderedCats.forEach(cat=>{
+    html += `<div class="tag" style="margin:16px 0 8px; width:100%;">${escapeHtml(cat)}</div><div class="chip-select">`;
+    byCat[cat].sort((a,b)=>a.name.localeCompare(b.name)).forEach(p=>{
+      const on = pedQtyMap[p.id] ? ' on' : '';
+      html += `<div class="chip${on}" id="chip-${p.id}" onclick="toggleChip('${p.id}')">${escapeHtml(p.name)} · ${brl(p.price)}</div>`;
+    });
+    html += '</div>';
+  });
+  chipBox.innerHTML = html;
+}
+function toggleChip(pid){
+  if(pedQtyMap[pid]){ delete pedQtyMap[pid]; }
+  else { pedQtyMap[pid] = 1; }
+  document.getElementById('chip-'+pid).classList.toggle('on');
+  renderQtyArea();
+  pulseCart();
+}
+function renderQtyArea(){
+  const box = document.getElementById('pedQtyArea');
+  const ids = Object.keys(pedQtyMap);
+  const countEl = document.getElementById('cartCount');
+  if(countEl) countEl.textContent = ids.length + (ids.length===1?' item':' itens');
+  if(!ids.length){
+    box.innerHTML = '<div class="empty" style="padding:10px 4px;">Nenhum produto selecionado ainda — toque nos produtos abaixo</div>';
+    updatePedPreview();
+    return;
+  }
+  box.innerHTML = ids.map(pid=>{
+    const p = DB.products.find(x=>x.id===pid);
+    if(!p) return '';
+    return `<div class="qty-row">
+      <span>${escapeHtml(p.name)}</span>
+      <div class="qty-controls">
+        <button onclick="qtyChange('${pid}',-1)">−</button>
+        <span class="qty-num" id="qtynum-${pid}">${pedQtyMap[pid]}</span>
+        <button onclick="qtyChange('${pid}',1)">+</button>
+      </div>
+    </div>`;
+  }).join('');
+  updatePedPreview();
+}
+function pulseCart(){
+  const bar = document.getElementById('cartMiniBar');
+  if(!bar) return;
+  bar.classList.remove('cart-pulse');
+  void bar.offsetWidth; // força reiniciar a animação
+  bar.classList.add('cart-pulse');
+}
+function qtyChange(pid, delta){
+  pedQtyMap[pid] = Math.max(1, (pedQtyMap[pid]||1)+delta);
+  document.getElementById('qtynum-'+pid).textContent = pedQtyMap[pid];
+  updatePedPreview();
+  pulseCart();
+}
+function updatePedPreview(){
+  let total = 0;
+  const count = Object.keys(pedQtyMap).length;
+  Object.keys(pedQtyMap).forEach(pid=>{
+    const p = DB.products.find(x=>x.id===pid);
+    if(p) total += p.price*pedQtyMap[pid];
+  });
+  const bar = document.getElementById('cartMiniBar');
+  if(count>0){
+    bar.style.display = 'flex';
+    document.getElementById('cmbCount').textContent = count + (count===1?' item':' itens');
+    document.getElementById('cmbTotal').textContent = brl(total);
+  } else {
+    bar.style.display = 'none';
+  }
+}
+function salvarPedido(){
+  const clientId = document.getElementById('pedCliente').value;
+  const date = document.getElementById('pedData').value || todayISO();
+  const ids = Object.keys(pedQtyMap);
+  if(!clientId){ toast('Selecione um cliente'); return; }
+  if(!ids.length){ toast('Selecione ao menos um produto'); return; }
+  const items = ids.map(pid=>{
+    const p = DB.products.find(x=>x.id===pid);
+    return { id:uid(), productId:pid, name:p.name, price:p.price, qty:pedQtyMap[pid], paid:false };
+  });
+  const confirmEnabled = localStorage.getItem(CONFIRM_FIADO_KEY) !== '0';
+  if(confirmEnabled){
+    showConfirmFiadoDialog(clientId, date, items);
+  } else {
+    commitFiado(clientId, date, items);
+  }
+}
+function showConfirmFiadoDialog(clientId, date, items){
+  const cli = DB.clients.find(x=>x.id===clientId);
+  const total = items.reduce((s,it)=>s+it.price*it.qty,0);
+  const itemsHtml = items.map(it=>`
+    <div class="list-item"><span>${it.qty}x ${escapeHtml(it.name)}</span><span class="money">${brl(it.price*it.qty)}</span></div>
+  `).join('');
+  pendingFiado = { clientId, date, items };
+  const body = `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2>Confirmar novo fiado</h2>
+    <div class="list-item"><span>Cliente</span><span class="name">${escapeHtml(cli?cli.name:'—')}</span></div>
+    <div class="list-item"><span>Data</span><span>${fmtDate(date)}</span></div>
+    <div class="tag" style="margin:14px 0 6px;">Itens</div>
+    ${itemsHtml}
+    <div class="list-item" style="border-top:2px solid var(--mustard); margin-top:10px; padding-top:12px;">
+      <span style="font-weight:700;">Total a adicionar à conta</span>
+      <span class="money owe" style="font-size:1.4rem;">${brl(total)}</span>
+    </div>
+    <button class="btn-main" onclick="confirmPendingFiado()">✅ Confirmar fiado</button>
+    <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="closeModal()">Cancelar</button>
+  `;
+  openModal(body);
+}
+function confirmPendingFiado(){
+  if(!pendingFiado) return;
+  const { clientId, date, items } = pendingFiado;
+  closeModal();
+  commitFiado(clientId, date, items);
+  pendingFiado = null;
+}
+async function commitFiado(clientId, date, items){
+  const oldTotal = clientDebt(clientId);
+  DB.orders.push({ id:uid(), clientId, date, items });
+  await saveOrders();
+  const cli = DB.clients.find(x=>x.id===clientId);
+  const totalPed = items.reduce((s,it)=>s+it.price*it.qty,0);
+  const newTotal = clientDebt(clientId);
+  logActivity(`${cli?cli.name:'Cliente'} pediu ${items.length} ite${items.length>1?'ns':'m'} (${brl(totalPed)}) em ${fmtDate(date)}`, '📝');
+  showFiadoConfirm(cli?cli.name:'Cliente', oldTotal, newTotal, totalPed);
+  pedQtyMap = {};
+  renderPedidoForm();
+  renderInicio();
+}
+function showFiadoConfirm(clientName, oldTotal, newTotal, added){
+  showAccountChangeAnim(clientName, oldTotal, newTotal, `+ ${brl(added)} adicionado`, true);
+}
+function showAccountChangeAnim(clientName, oldTotal, newTotal, label, isIncrease){
+  const overlay = document.createElement('div');
+  overlay.className = 'fiado-confirm-overlay';
+  const icon = isIncrease ? '✅' : '💰';
+  overlay.innerHTML = `
+    <div class="fiado-confirm-card">
+      <div class="fc-check">${icon}</div>
+      <div class="fc-name">${escapeHtml(clientName)}</div>
+      <div class="fc-added" style="${isIncrease?'':'background:#264026;'}">${escapeHtml(label)}</div>
+      <div class="fc-total-label">Nova conta em aberto</div>
+      <div class="fc-total" id="fcCounter" style="${newTotal<=0?'color:var(--olive);':''}">${brl(oldTotal)}</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const counterEl = overlay.querySelector('#fcCounter');
+  const duration = 750;
+  const start = performance.now();
+  function step(now){
+    const t = Math.min(1, (now-start)/duration);
+    const eased = 1 - Math.pow(1-t, 3);
+    counterEl.textContent = brl(oldTotal + (newTotal-oldTotal)*eased);
+    if(t<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+  const dismiss = () => { overlay.classList.add('fade-out'); setTimeout(()=>overlay.remove(), 250); };
+  overlay.addEventListener('click', dismiss);
+  setTimeout(dismiss, 2600);
+}
+
+/* ---------- CALENDÁRIO ---------- */
+function renderCalendario(){
+  const y = calRef.getFullYear(), m = calRef.getMonth();
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('calTitle').textContent = meses[m]+' '+y;
+  const first = new Date(y,m,1);
+  const startDow = first.getDay();
+  const daysInMonth = new Date(y,m+1,0).getDate();
+  const grid = document.getElementById('calGrid');
+  let html = ['D','S','T','Q','Q','S','S'].map(d=>`<div class="cal-head">${d}</div>`).join('');
+  for(let i=0;i<startDow;i++) html += '<div class="cal-day empty2"></div>';
+  const salesByDay = {};
+  DB.orders.forEach(o=>{ if(o.date.slice(0,7)===`${y}-${String(m+1).padStart(2,'0')}`) salesByDay[o.date]=true; });
+  for(let d=1; d<=daysInMonth; d++){
+    const iso = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const has = salesByDay[iso];
+    html += `<div class="cal-day ${has?'has-sale':''}" onclick="abrirDia('${iso}')">
+      <span class="dnum">${d}</span>${has?'<span class="dot"></span>':''}
+    </div>`;
+  }
+  grid.innerHTML = html;
+}
+function calMudarMes(delta){
+  calRef.setMonth(calRef.getMonth()+delta);
+  renderCalendario();
+}
+function abrirDia(iso){
+  const orders = DB.orders.filter(o=>o.date===iso);
+  const clientesDoDia = [...new Set(orders.map(o=>o.clientId))];
+  const produtosDoDia = {};
+  let totalDia = 0;
+  orders.forEach(o=>o.items.forEach(it=>{
+    produtosDoDia[it.name] = (produtosDoDia[it.name]||0)+it.qty;
+    totalDia += it.price*it.qty;
+  }));
+  let body = `<button class="modal-close" onclick="closeModal()">✕</button>
+    <h2>${fmtDate(iso)}</h2>
+    <div class="list-item"><span>Total vendido no dia</span><span class="money">${brl(totalDia)}</span></div>
+    <div class="list-item"><span>Clientes atendidos</span><span>${clientesDoDia.length}</span></div>`;
+  if(!orders.length){
+    body += '<div class="empty">Nenhuma venda registrada neste dia.</div>';
+  } else {
+    body += '<h3 style="margin-top:14px; color:var(--mustard-light); font-size:.9rem;">Por cliente</h3>';
+    orders.forEach(o=>{
+      const c = DB.clients.find(x=>x.id===o.clientId);
+      const soma = o.items.reduce((s,it)=>s+it.price*it.qty,0);
+      body += `<div class="card" style="margin-bottom:8px;">
+        <div class="list-item" style="border:none;"><span class="name">${escapeHtml(c?c.name:'(removido)')}</span><span class="money">${brl(soma)}</span></div>`;
+      o.items.forEach(it=>{
+        body += `<div class="list-item" style="font-size:.82rem;"><span>${it.qty}x ${escapeHtml(it.name)}</span><span>${brl(it.price*it.qty)}</span></div>`;
+      });
+      body += `</div>`;
+    });
+    body += '<h3 style="margin-top:10px; color:var(--mustard-light); font-size:.9rem;">Produtos vendidos no dia</h3>';
+    Object.keys(produtosDoDia).sort((a,b)=>produtosDoDia[b]-produtosDoDia[a]).forEach(name=>{
+      body += `<div class="list-item"><span>${escapeHtml(name)}</span><span>${produtosDoDia[name]}x</span></div>`;
+    });
+  }
+  openModal(body);
+}
+
+/* ---------- CARDÁPIO ---------- */
+function renderCardapio(){
+  const box = document.getElementById('cardapioArea');
+  if(!DB.products.length){ box.innerHTML = '<div class="empty">Cadastre produtos para gerar o cardápio.</div>'; return; }
+  const byCat = {};
+  DB.products.forEach(p=>{ (byCat[p.cat||'Outros'] = byCat[p.cat||'Outros']||[]).push(p); });
+  const catsPresent = Object.keys(byCat);
+  const orderedCats = CATEGORY_ORDER.filter(c=>catsPresent.includes(c))
+    .concat(catsPresent.filter(c=>!CATEGORY_ORDER.includes(c)).sort());
+  let html = '<div class="menu-sheet"><h2>Cardápio · Dunnas</h2>';
+  orderedCats.forEach(cat=>{
+    html += `<div class="menu-cat">${escapeHtml(cat)}</div>`;
+    byCat[cat].sort((a,b)=>a.name.localeCompare(b.name)).forEach(p=>{
+      html += `<div class="menu-item-wrap">
+        <div class="menu-item"><span>${escapeHtml(p.name)}</span><span class="dots"></span><span>${brl(p.price)}</span></div>
+        ${p.desc?`<div class="menu-item-desc">${escapeHtml(p.desc)}</div>`:''}
+      </div>`;
+    });
+  });
+  html += '</div>';
+  box.innerHTML = html;
+}
+function openFullscreenView(innerHtml){
+  const overlay = document.createElement('div');
+  overlay.className = 'fullscreen-view-overlay';
+  overlay.innerHTML = `<div class="fullscreen-view-topbar">
+      <button class="btn-ghost btn-small" onclick="this.closest('.fullscreen-view-overlay').remove()">✕ Fechar</button>
+    </div>
+    <div class="fullscreen-view-content">${innerHtml}</div>`;
+  document.body.appendChild(overlay);
+  return overlay;
+}
+function fullscreenCardapio(){
+  const content = document.querySelector('#cardapioArea .menu-sheet');
+  if(!content){ toast('Gere o cardápio primeiro'); return; }
+  openFullscreenView(content.outerHTML);
+}
+function printCardapio(){
+  const content = document.querySelector('#cardapioArea .menu-sheet');
+  if(!content){ toast('Gere o cardápio primeiro'); return; }
+  document.getElementById('printArea').innerHTML = content.outerHTML;
+  window.print();
+}
+function downloadCardapioImage(){
+  const content = document.querySelector('#cardapioArea .menu-sheet');
+  if(!content){ toast('Gere o cardápio primeiro'); return; }
+  if(typeof html2canvas === 'undefined'){ toast('Sem conexão pra gerar imagem agora. Tente de novo com internet.'); return; }
+  toast('Gerando imagem...');
+  html2canvas(content, {backgroundColor:'#f2e9d8', scale:2}).then(canvas=>{
+    canvas.toBlob(blob=>{
+      downloadBlobFile(blob, `dunnas-cardapio-${todayISO()}.png`);
+      toast('Imagem do cardápio baixada!');
+    });
+  }).catch(err=>{ console.error(err); toast('Erro ao gerar imagem'); });
+}
+
+/* ---------- ESTATÍSTICAS ---------- */
+function renderStats(){
+  const qtyByProduct = {};
+  const countByClient = {};
+  const valueByClient = {};
+  DB.orders.forEach(o=>{
+    countByClient[o.clientId] = (countByClient[o.clientId]||0)+1;
+    o.items.forEach(it=>{
+      qtyByProduct[it.name] = (qtyByProduct[it.name]||0)+it.qty;
+      valueByClient[o.clientId] = (valueByClient[o.clientId]||0)+it.price*it.qty;
+    });
+  });
+  const maxQty = Math.max(1, ...Object.values(qtyByProduct));
+  const prodBox = document.getElementById('statProdutos');
+  const prodEntries = Object.entries(qtyByProduct).sort((a,b)=>b[1]-a[1]);
+  prodBox.innerHTML = prodEntries.length ? prodEntries.map(([name,qty])=>`
+    <div class="stat-bar-wrap">
+      <div class="stat-bar-label"><span>${escapeHtml(name)}</span><span>${qty}x</span></div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${(qty/maxQty*100)}%;"></div></div>
+    </div>`).join('') : '<div class="empty">Sem dados ainda.</div>';
+
+  const maxCount = Math.max(1, ...Object.values(countByClient));
+  const cliBox = document.getElementById('statClientes');
+  const cliEntries = Object.entries(countByClient).sort((a,b)=>b[1]-a[1]).map(([id,count])=>{
+    const c = DB.clients.find(x=>x.id===id);
+    return {name: c?c.name:'(removido)', count, valor: valueByClient[id]||0};
+  });
+  cliBox.innerHTML = cliEntries.length ? cliEntries.map(e=>`
+    <div class="stat-bar-wrap">
+      <div class="stat-bar-label"><span>${escapeHtml(e.name)}</span><span>${e.count} pedidos · ${brl(e.valor)}</span></div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${(e.count/maxCount*100)}%; background:var(--olive);"></div></div>
+    </div>`).join('') : '<div class="empty">Sem dados ainda.</div>';
+}
+
+function exportBackupTxt(){
+  const lines = [];
+  lines.push('DUNNAS GERENCIAMENTO — CÓPIA DE SEGURANÇA EM TEXTO');
+  lines.push(`Gerado em: ${fmtDate(todayISO())}`);
+  lines.push('='.repeat(50));
+  lines.push('');
+  lines.push('--- CLIENTES E DÍVIDAS ---');
+  lines.push('');
+  const clientsSorted = DB.clients.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  if(!clientsSorted.length){ lines.push('(nenhum cliente cadastrado)'); }
+  clientsSorted.forEach(c=>{
+    const debt = clientDebt(c.id);
+    lines.push(`${c.name} — total em aberto: ${brl(debt)}`);
+    const orders = allOrdersFor(c.id);
+    orders.forEach(o=>{
+      o.items.forEach(it=>{
+        lines.push(`  [${fmtDate(o.date)}] ${it.qty}x ${it.name} — ${brl(it.price*it.qty)}${it.paid?' (PAGO)':''}`);
+      });
+    });
+    clientAdjustments(c.id).forEach(a=>{
+      lines.push(`  [${fmtDate(a.date)}] ${a.type==='debit'?'Valor adicionado à conta':'Pagamento recebido'}: ${brl(a.amount)}${a.note?' — '+a.note:''}`);
+    });
+    lines.push('');
+  });
+  lines.push('--- PRODUTOS CADASTRADOS ---');
+  lines.push('');
+  const byCat = {};
+  DB.products.forEach(p=>{ (byCat[p.cat||'Outros'] = byCat[p.cat||'Outros']||[]).push(p); });
+  Object.keys(byCat).sort().forEach(cat=>{
+    lines.push(`${cat}:`);
+    byCat[cat].forEach(p=>lines.push(`  ${p.name} — ${brl(p.price)}`));
+    lines.push('');
+  });
+  const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  downloadBlobFile(blob, `dunnas-copia-${todayISO()}.txt`);
+  toast('Cópia em texto baixada!');
+  logActivity('Cópia de segurança em texto exportada', '📄');
+}
+const THEMES = {
+  classico: { '--umber':'#2b241c', '--umber-2':'#38301f', '--paper':'#f2e9d8', '--paper-dim':'#cfc2a2', '--mustard':'#c99a2e', '--mustard-light':'#e3b94a', '--olive':'#5c6b3f', '--rust':'#a54a2a', '--ink':'#241d14', '--line':'#8a7a54' },
+  floresta: { '--umber':'#1b2618', '--umber-2':'#233220', '--paper':'#eaf2e2', '--paper-dim':'#b9c9ac', '--mustard':'#7fa650', '--mustard-light':'#9bc76a', '--olive':'#4a6b3a', '--rust':'#c26b2e', '--ink':'#14200f', '--line':'#5c7a4a' },
+  noite: { '--umber':'#161a26', '--umber-2':'#1f2536', '--paper':'#e6eaf5', '--paper-dim':'#a6b0cc', '--mustard':'#5b8ad1', '--mustard-light':'#7fa8e6', '--olive':'#3f5c8a', '--rust':'#c25b5b', '--ink':'#0f1220', '--line':'#3d4966' },
+  vinho: { '--umber':'#2a1418', '--umber-2':'#38191f', '--paper':'#f2e2e2', '--paper-dim':'#cfa2a2', '--mustard':'#c9526a', '--mustard-light':'#e37890', '--olive':'#7a3f4d', '--rust':'#e0752e', '--ink':'#1c0c0f', '--line':'#8a5460' }
+};
+const THEME_KEY = 'dunnas_theme';
+const CUSTOM_COLOR_KEY = 'dunnas_custom_colors';
+function applyTheme(name){
+  const theme = THEMES[name];
+  if(!theme) return;
+  Object.keys(theme).forEach(v=>document.documentElement.style.setProperty(v, theme[v]));
+  localStorage.setItem(THEME_KEY, name);
+  localStorage.removeItem(CUSTOM_COLOR_KEY);
+  renderConfig();
+}
+function setCustomColor(varName, value){
+  document.documentElement.style.setProperty(varName, value);
+  let custom = {};
+  try{ custom = JSON.parse(localStorage.getItem(CUSTOM_COLOR_KEY) || '{}'); }catch(e){}
+  custom[varName] = value;
+  localStorage.setItem(CUSTOM_COLOR_KEY, JSON.stringify(custom));
+}
+function resetTheme(){
+  localStorage.removeItem(THEME_KEY);
+  localStorage.removeItem(CUSTOM_COLOR_KEY);
+  Object.keys(THEMES.classico).forEach(v=>document.documentElement.style.removeProperty(v));
+  toast('Cores restauradas ao padrão');
+  renderConfig();
+}
+function applySavedTheme(){
+  const name = localStorage.getItem(THEME_KEY) || 'classico';
+  const theme = THEMES[name] || THEMES.classico;
+  Object.keys(theme).forEach(v=>document.documentElement.style.setProperty(v, theme[v]));
+  try{
+    const custom = JSON.parse(localStorage.getItem(CUSTOM_COLOR_KEY) || '{}');
+    Object.keys(custom).forEach(v=>document.documentElement.style.setProperty(v, custom[v]));
+  }catch(e){}
+}
+
+const ICON_CFG_KEY = 'dunnas_icon_cfg';
+function drawIconPreview(){
+  const canvas = document.getElementById('iconPreviewCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const size = canvas.width;
+  const bg = document.getElementById('iconBg').value;
+  const fg = document.getElementById('iconFg').value;
+  const letter = (document.getElementById('iconLetter').value || 'D').slice(0,2);
+  ctx.clearRect(0,0,size,size);
+  roundRectPath(ctx, 0, 0, size, size, size*0.16);
+  ctx.fillStyle = bg; ctx.fill();
+  roundRectPath(ctx, size*0.05, size*0.05, size*0.9, size*0.9, size*0.13);
+  ctx.strokeStyle = fg; ctx.lineWidth = Math.max(1,size*0.02); ctx.stroke();
+  ctx.fillStyle = fg;
+  ctx.font = `bold ${size*0.48}px Georgia, serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(letter, size/2, size/2 + size*0.03);
+  localStorage.setItem(ICON_CFG_KEY, JSON.stringify({
+    name: document.getElementById('iconAppName').value, letter, bg, fg
+  }));
+}
+function roundRectPath(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function makeIconCanvas(size, bg, fg, letter){
+  const c = document.createElement('canvas'); c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+  roundRectPath(ctx, 0, 0, size, size, size*0.16); ctx.fillStyle = bg; ctx.fill();
+  roundRectPath(ctx, size*0.05, size*0.05, size*0.9, size*0.9, size*0.13);
+  ctx.strokeStyle = fg; ctx.lineWidth = Math.max(2,size*0.02); ctx.stroke();
+  ctx.fillStyle = fg;
+  ctx.font = `bold ${size*0.48}px Georgia, serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(letter, size/2, size/2 + size*0.03);
+  return c;
+}
+function downloadBlobFile(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function generateIconFiles(){
+  const name = (document.getElementById('iconAppName').value || 'Dunnas').trim();
+  const letter = (document.getElementById('iconLetter').value || 'D').trim().slice(0,2);
+  const bg = document.getElementById('iconBg').value;
+  const fg = document.getElementById('iconFg').value;
+  const c192 = makeIconCanvas(192, bg, fg, letter);
+  const c512 = makeIconCanvas(512, bg, fg, letter);
+  c192.toBlob(blob=>downloadBlobFile(blob, 'icon-192.png'));
+  c512.toBlob(blob=>downloadBlobFile(blob, 'icon-512.png'));
+  const manifest = {
+    name: name,
+    short_name: name.slice(0,12),
+    description: 'Controle de fiado do refeitório',
+    start_url: './dunnas.html',
+    display: 'standalone',
+    background_color: bg,
+    theme_color: bg,
+    orientation: 'portrait',
+    icons: [
+      { src:'icon-192.png', sizes:'192x192', type:'image/png', purpose:'any maskable' },
+      { src:'icon-512.png', sizes:'512x512', type:'image/png', purpose:'any maskable' }
+    ]
+  };
+  const manifestBlob = new Blob([JSON.stringify(manifest, null, 2)], {type:'application/json'});
+  downloadBlobFile(manifestBlob, 'manifest.webmanifest');
+  toast('Arquivos gerados! Suba os 3 no GitHub e reinstale o app.');
+  logActivity('Novo ícone/nome do app gerado para download', '🎨');
+}
+/* ---------- Opções de desenvolvedor: Discord webhook ---------- */
+const DISCORD_WEBHOOK_KEY = 'dunnas_discord_webhook_url';
+const DISCORD_ENABLED_KEY = 'dunnas_discord_enabled';
+let discordEditMode = false;
+function toggleDiscordEditMode(){
+  discordEditMode = true;
+  renderConfig();
+}
+function setDiscordEnabled(val){
+  localStorage.setItem(DISCORD_ENABLED_KEY, val ? '1' : '0');
+  toast(val ? 'Envio pro Discord ativado' : 'Envio pro Discord desligado');
+  renderConfig();
+}
+function saveDiscordWebhook(){
+  const url = document.getElementById('discordWebhookUrl').value.trim();
+  if(url && !url.startsWith('https://discord.com/api/webhooks/') && !url.startsWith('https://discordapp.com/api/webhooks/')){
+    toast('Isso não parece um link de webhook do Discord válido');
+    return;
+  }
+  localStorage.setItem(DISCORD_WEBHOOK_KEY, url);
+  toast(url ? 'Link do webhook salvo' : 'Link removido');
+  discordEditMode = false;
+  renderConfig();
+}
+async function testDiscordWebhook(){
+  const url = localStorage.getItem(DISCORD_WEBHOOK_KEY);
+  if(!url){ toast('Cole e salve o link do webhook primeiro'); return; }
+  toast('Enviando teste...');
+  try{
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ content: `🔧 Teste de conexão do Dunnas Gerenciamento — se você está vendo isso, está tudo funcionando (${fmtDate(todayISO())}).` })
+    });
+    if(resp.ok){ toast('Teste enviado! Confira o canal do Discord.'); }
+    else{ toast(`Discord recusou (código ${resp.status}) — confira o link`); }
+  }catch(err){
+    console.error('Erro no teste do webhook:', err);
+    toast('Erro de conexão ao testar — veja o console');
+  }
+}
+async function sendBackupToDiscord(blob, filename){
+  const enabled = localStorage.getItem(DISCORD_ENABLED_KEY) === '1';
+  const url = localStorage.getItem(DISCORD_WEBHOOK_KEY);
+  if(!enabled || !url) return;
+  try{
+    const form = new FormData();
+    form.append('content', `💾 Backup automático — ${fmtDate(todayISO())}`);
+    form.append('file', blob, filename);
+    const resp = await fetch(url, { method:'POST', body: form });
+    if(!resp.ok){ console.warn('Discord recusou o envio do backup, código', resp.status); }
+  }catch(err){
+    console.error('Erro ao enviar backup pro Discord:', err);
+  }
+}
+
+const FONT_SCALE_KEY = 'dunnas_font_scale';
+function setFontScale(scale){
+  document.documentElement.style.fontSize = (16*scale)+'px';
+  localStorage.setItem(FONT_SCALE_KEY, String(scale));
+  renderConfig();
+}
+function renderConfig(){
+  const saved = parseFloat(localStorage.getItem(FONT_SCALE_KEY) || '1');
+  document.querySelectorAll('#fontSizeOptions .chip').forEach(chip=>{
+    chip.classList.toggle('on', parseFloat(chip.dataset.scale)===saved);
+  });
+  const savedTheme = localStorage.getItem(THEME_KEY) || 'classico';
+  document.querySelectorAll('#themeOptions .chip').forEach(chip=>{
+    chip.classList.toggle('on', chip.dataset.theme===savedTheme);
+  });
+  const confirmFiadoEnabled = localStorage.getItem(CONFIRM_FIADO_KEY) !== '0';
+  document.querySelectorAll('#confirmFiadoOptions .chip').forEach(chip=>{
+    chip.classList.toggle('on', (chip.dataset.enabled==='1')===confirmFiadoEnabled);
+  });
+  const savedAutoBackup = parseFloat(localStorage.getItem(AUTO_BACKUP_KEY) || '0');
+  document.querySelectorAll('#autoBackupOptions .chip').forEach(chip=>{
+    chip.classList.toggle('on', parseFloat(chip.dataset.hours)===savedAutoBackup);
+  });
+  const savedWebhook = localStorage.getItem(DISCORD_WEBHOOK_KEY) || '';
+  const webhookInput = document.getElementById('discordWebhookUrl');
+  const statusView = document.getElementById('discordWebhookStatusView');
+  const editView = document.getElementById('discordWebhookEditView');
+  if(savedWebhook && !discordEditMode){
+    statusView.style.display = 'block';
+    editView.style.display = 'none';
+  } else {
+    statusView.style.display = 'none';
+    editView.style.display = 'block';
+    if(webhookInput && document.activeElement !== webhookInput) webhookInput.value = '';
+  }
+  const discordEnabled = localStorage.getItem(DISCORD_ENABLED_KEY) === '1';
+  document.querySelectorAll('#discordEnabledOptions .chip').forEach(chip=>{
+    chip.classList.toggle('on', (chip.dataset.enabled==='1')===discordEnabled);
+  });
+  const savedDiscordHours = parseFloat(localStorage.getItem(DISCORD_BACKUP_HOURS_KEY) || '0');
+  document.querySelectorAll('#discordIntervalOptions .chip').forEach(chip=>{
+    chip.classList.toggle('on', parseFloat(chip.dataset.hours)===savedDiscordHours);
+  });
+  const bgNow = getComputedStyle(document.documentElement).getPropertyValue('--umber').trim();
+  const paperNow = getComputedStyle(document.documentElement).getPropertyValue('--paper').trim();
+  const bgHex = colorToHex(bgNow); const paperHex = colorToHex(paperNow);
+  if(bgHex) document.getElementById('customBgColor').value = bgHex;
+  if(paperHex) document.getElementById('customTextColor').value = paperHex;
+  try{
+    const iconCfg = JSON.parse(localStorage.getItem(ICON_CFG_KEY) || 'null');
+    if(iconCfg){
+      document.getElementById('iconAppName').value = iconCfg.name || 'Dunnas';
+      document.getElementById('iconLetter').value = iconCfg.letter || 'D';
+      document.getElementById('iconBg').value = iconCfg.bg || '#2b241c';
+      document.getElementById('iconFg').value = iconCfg.fg || '#e3b94a';
+    }
+  }catch(e){}
+  drawIconPreview();
+}
+function colorToHex(color){
+  if(!color) return null;
+  if(color.startsWith('#')) return color.length===7 ? color : null;
+  const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if(!m) return null;
+  return '#'+[m[1],m[2],m[3]].map(n=>parseInt(n,10).toString(16).padStart(2,'0')).join('');
+}
+function applySavedFontScale(){
+  const saved = parseFloat(localStorage.getItem(FONT_SCALE_KEY) || '1');
+  document.documentElement.style.fontSize = (16*saved)+'px';
+}
+
+const CONFIRM_FIADO_KEY = 'dunnas_confirm_fiado';
+function setConfirmFiado(enabled){
+  localStorage.setItem(CONFIRM_FIADO_KEY, enabled ? '1' : '0');
+  toast(enabled ? 'Confirmação antes de registrar fiado ativada' : 'Confirmação desativada — vai direto');
+  renderConfig();
+}
+
+const AUTO_BACKUP_KEY = 'dunnas_autobackup_hours';
+function setAutoBackupInterval(hours){
+  localStorage.setItem(AUTO_BACKUP_KEY, String(hours));
+  toast(hours===0 ? 'Backup automático desligado' : `Backup automático a cada ${hours}h ativado`);
+  renderConfig();
+}
+function checkAutoBackup(){
+  const hours = parseFloat(localStorage.getItem(AUTO_BACKUP_KEY) || '0');
+  if(hours){
+    const lastTs = localStorage.getItem('dunnas_last_backup_ts') || localStorage.getItem('dunnas_last_backup');
+    const lastTime = lastTs ? new Date(lastTs).getTime() : 0;
+    const elapsedHours = (Date.now() - lastTime) / 3600000;
+    if(elapsedHours >= hours){
+      exportBackup();
+      toast('Backup automático realizado');
+    }
+  }
+  checkDiscordAutoBackup();
+}
+const DISCORD_BACKUP_HOURS_KEY = 'dunnas_discord_backup_hours';
+function setDiscordBackupInterval(hours){
+  localStorage.setItem(DISCORD_BACKUP_HOURS_KEY, String(hours));
+  toast(hours===0 ? 'Envio automático ao Discord desligado' : `Envio ao Discord a cada ${hours}h ativado`);
+  renderConfig();
+}
+function checkDiscordAutoBackup(){
+  const enabled = localStorage.getItem(DISCORD_ENABLED_KEY) === '1';
+  const webhookUrl = localStorage.getItem(DISCORD_WEBHOOK_KEY);
+  const hours = parseFloat(localStorage.getItem(DISCORD_BACKUP_HOURS_KEY) || '0');
+  if(!enabled || !webhookUrl || !hours) return;
+  const lastTs = localStorage.getItem('dunnas_last_discord_backup_ts');
+  const lastTime = lastTs ? new Date(lastTs).getTime() : 0;
+  const elapsedHours = (Date.now() - lastTime) / 3600000;
+  if(elapsedHours >= hours){
+    const { blob, filename } = buildBackupBlob();
+    sendBackupToDiscord(blob, filename);
+    localStorage.setItem('dunnas_last_discord_backup_ts', new Date().toISOString());
+  }
+}
+
+/* ---------- Utils ---------- */
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function fmtDate(iso){ const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+function fmtDateTime(isoTs){
+  const d = new Date(isoTs);
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mi = String(d.getMinutes()).padStart(2,'0');
+  return `${dd}/${mm} ${hh}:${mi}`;
+}
+function activityRowHtml(a){
+  return `<div class="list-item">
+    <span>${a.icon||'•'} ${escapeHtml(a.text)}</span>
+    <span class="meta" style="white-space:nowrap;">${fmtDateTime(a.ts)}</span>
+  </div>`;
+}
+function renderAtividadePreview(){
+  const box = document.getElementById('atividadePreview');
+  if(!box) return;
+  const items = DB.activity.slice(0,5);
+  box.innerHTML = items.length ? items.map(activityRowHtml).join('') : '<div class="empty">Nenhuma atividade ainda.</div>';
+}
+function renderAtividade(filter){
+  const box = document.getElementById('listaAtividade');
+  if(!box) return;
+  let items = DB.activity;
+  if(filter) items = items.filter(a=>a.text.toLowerCase().includes(filter.toLowerCase()));
+  box.innerHTML = items.length ? items.map(activityRowHtml).join('') : '<div class="empty">Nenhuma atividade encontrada.</div>';
+}
+
+/* ---------- Init ---------- */
+async function requestPersistentStorage(){
+  if(navigator.storage && navigator.storage.persist){
+    try{
+      const already = await navigator.storage.persisted();
+      if(already) return true;
+      const granted = await navigator.storage.persist();
+      return granted;
+    }catch(e){ return false; }
+  }
+  return false;
+}
+
+(async function init(){
+  const now = new Date();
+  applySavedFontScale();
+  applySavedTheme();
+  document.getElementById('dateStamp').textContent = fmtDate(todayISO());
+  await loadAll();
+  renderInicio();
+  renderBackupReminder();
+  checkAutoBackup();
+  if('serviceWorker' in navigator){
+    try{ await navigator.serviceWorker.register('./sw.js'); }catch(e){ console.warn('SW não registrado:', e); }
+  }
+  const persisted = await requestPersistentStorage();
+  if(!persisted){
+    const box = document.getElementById('sumTotalDevido').closest('.card');
+    if(box){
+      const warn = document.createElement('p');
+      warn.style.cssText = 'font-size:.72rem; color:var(--mustard-light); margin-top:10px; border-top:1px dashed var(--line); padding-top:8px;';
+      warn.textContent = '⚠ O navegador não confirmou armazenamento protegido. Exporte backups com frequência por segurança.';
+      box.appendChild(warn);
+    }
+  }
+})();
+</script>
+</body>
+</html>
