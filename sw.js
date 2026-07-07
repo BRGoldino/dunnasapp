@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dunnas-v26';
+const CACHE_NAME = 'dunnas-v27';
 const ASSETS = ['./dunnas.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {

@@ -190,12 +190,13 @@
   th,td{text-align:left; padding:6px 4px; border-bottom:1px solid var(--umber);}
   th{color:var(--paper-dim); text-transform:uppercase; font-size:.62rem;}
 
-  .menu-sheet{background:var(--paper); color:var(--ink); border-radius:6px; padding:18px;}
+  .menu-sheet{background:var(--stmt-bg, var(--paper)); color:var(--ink); border-radius:6px; padding:18px;}
   .menu-sheet h2{color:var(--rust); font-family:Georgia,serif; text-align:center; border-bottom:2px solid var(--rust); padding-bottom:10px;}
   .menu-cat{margin-top:22px; font-weight:700; color:var(--olive); text-transform:uppercase; letter-spacing:.12em; font-size:1rem; border-bottom:2px solid var(--olive); padding-bottom:6px;}
-  .menu-item{display:flex; justify-content:space-between; padding:5px 0; font-family:Georgia,serif;}
-  .menu-item .dots{flex:1; border-bottom:1px dotted #999; margin:0 6px 5px;}
-  .menu-price{color:#a54a2a; font-weight:700; font-size:1.05em;}
+  .menu-item{display:flex; justify-content:space-between; align-items:flex-start; gap:6px; padding:5px 0; font-family:Georgia,serif;}
+  .menu-item > span:first-child{flex:1 1 auto; min-width:0;}
+  .menu-item .dots{flex:0 1 16px; min-width:6px; border-bottom:1px dotted #999; margin:0 6px 5px; align-self:flex-end;}
+  .menu-price{color:#a54a2a; font-weight:700; font-size:1.05em; flex-shrink:0; white-space:nowrap;}
 
   .statement-day{
     background:#fbf5e9; border:1px solid #ddd0b0; border-radius:8px;
@@ -203,16 +204,16 @@
   }
   .statement-day-header{
     display:flex; justify-content:space-between; align-items:baseline;
-    font-family:Georgia,serif; font-weight:700; color:#333; font-size:1rem;
+    font-family:Georgia,serif; font-weight:700; color:#333; font-size:1em;
     padding-bottom:6px; margin-bottom:4px; border-bottom:1px solid #e2d5b8;
   }
-  .statement-day-total{color:#a54a2a; font-size:1.1em;}
+  .statement-day-total{color:var(--stmt-price,#a54a2a); font-size:1.1em;}
   .statement-item{
     display:flex; justify-content:space-between; align-items:baseline;
-    padding:4px 0; font-size:.82rem;
+    padding:4px 0; font-size:.86em;
   }
-  .statement-item-name{color:#555;}
-  .statement-item-price{color:#a54a2a; font-weight:600; white-space:nowrap; margin-left:10px;}
+  .statement-item-name{color:var(--stmt-text,#3a2f22);}
+  .statement-item-price{color:var(--stmt-price,#a54a2a); font-weight:700; white-space:nowrap; margin-left:10px;}
   .menu-item-wrap{margin-bottom:2px;}
   .menu-item-desc{font-size:.7rem; color:#7a6a55; font-style:italic; margin:-4px 0 4px;}
 
@@ -524,6 +525,10 @@
       <h2>Notas de atualização</h2>
       <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mais recente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0 0 12px;">
+        <li>Extrato agora tem configurações próprias (botão "⚙️ Configurações do extrato" na tela cheia) — tamanho de letra, cor de fundo, cor do texto e cor do preço, tudo independente do tamanho de letra geral do app</li>
+        <li>Extrato vem por padrão em tamanho "Muito grande" e com cores mais visíveis (texto e preço menos apagados)</li>
+        <li>Corrigido: preço não quebra mais de linha estranhamente no cardápio em fontes grandes</li>
+        <li>Nova função "Renomear cliente" na ficha do cliente</li>
         <li>Extrato do cliente reformulado: cada dia agora é um bloco próprio, com o total do dia em destaque separado do preço de cada item — mais fácil de ler, sem ficar tudo do mesmo tamanho</li>
         <li>Corrigido: cardápio e seleção de produtos no fiado agora ordenam por preço (menor pro maior) dentro de cada categoria, não mais por nome</li>
         <li>Preços destacados com cor mais forte no cardápio e no extrato do cliente, pra ficar mais fácil de ver</li>
@@ -806,18 +811,19 @@ function buildClientStatementHtml(id){
   const debt = clientDebt(id);
   const orders = allOrdersFor(id);
   const adjustments = clientAdjustments(id);
+  const prefs = getStmtPrefs();
   let entries = [];
   orders.forEach(o=>entries.push({date:o.date, type:'order', data:o}));
   adjustments.forEach(a=>entries.push({date:a.date, type:'adj', data:a}));
   entries.sort((a,b)=> a.date<b.date?1:-1);
-  let html = `<div class="menu-sheet" id="clientStatementSheet">
+  let html = `<div class="menu-sheet" id="clientStatementSheet" style="background:${prefs.bg}; font-size:${Math.round(16*prefs.scale)}px; --stmt-text:${prefs.text}; --stmt-price:${prefs.price};">
     <h2>${escapeHtml(c.name)}</h2>
-    <div style="text-align:center; font-size:.72rem; color:#888; margin-bottom:12px;">Extrato gerado em ${fmtDate(todayISO())} · Dunnas Alimentação Corporativa</div>
+    <div style="text-align:center; font-size:.72em; color:#888; margin-bottom:12px;">Extrato gerado em ${fmtDate(todayISO())} · Dunnas Alimentação Corporativa</div>
     <div style="text-align:center; margin:10px 0 18px;">
-      <div style="font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:#888;">Total em aberto</div>
-      <div style="font-size:1.9rem; font-weight:700; color:${debt>0?'#a54a2a':'#5c6b3f'};">${brl(debt)}</div>
+      <div style="font-size:.68em; text-transform:uppercase; letter-spacing:.1em; color:#888;">Total em aberto</div>
+      <div style="font-size:1.9em; font-weight:700; color:${debt>0?'#a54a2a':'#5c6b3f'};">${brl(debt)}</div>
     </div>
-    <div class="menu-cat" style="color:#5c6b3f;">Histórico detalhado</div>`;
+    <div class="menu-cat" style="color:#5c6b3f; font-size:1em;">Histórico detalhado</div>`;
   if(!entries.length){
     html += '<div style="text-align:center; color:#999; font-style:italic; padding:16px 4px;">Nenhum registro ainda.</div>';
   } else {
@@ -848,10 +854,60 @@ function buildClientStatementHtml(id){
   html += '</div>';
   return html;
 }
+const STMT_PREFS_KEY = 'dunnas_stmt_prefs';
+const STMT_DEFAULTS = { scale:1.5, bg:'#f2e9d8', text:'#3a2f22', price:'#a54a2a' };
+function getStmtPrefs(){
+  try{ return Object.assign({}, STMT_DEFAULTS, JSON.parse(localStorage.getItem(STMT_PREFS_KEY)||'{}')); }
+  catch(e){ return Object.assign({}, STMT_DEFAULTS); }
+}
+function saveStmtPrefs(p){ localStorage.setItem(STMT_PREFS_KEY, JSON.stringify(p)); }
+let stmtSettingsOpen = false;
+function toggleStmtSettings(id){
+  stmtSettingsOpen = !stmtSettingsOpen;
+  refreshExtratoView(id);
+}
+function setStmtScale(id, scale){
+  const p = getStmtPrefs(); p.scale = scale; saveStmtPrefs(p);
+  refreshExtratoView(id);
+}
+function setStmtColor(id, key, value){
+  const p = getStmtPrefs(); p[key] = value; saveStmtPrefs(p);
+  refreshExtratoView(id);
+}
+function resetStmtPrefs(id){
+  localStorage.removeItem(STMT_PREFS_KEY);
+  toast('Aparência do extrato restaurada ao padrão');
+  refreshExtratoView(id);
+}
+function refreshExtratoView(id){
+  const overlay = document.querySelector('.fullscreen-view-overlay');
+  if(overlay) overlay.remove();
+  abrirExtratoCliente(id);
+}
+function buildStmtSettingsPanel(id){
+  const p = getStmtPrefs();
+  const scaleChip = (val,label) => `<div class="chip ${p.scale===val?'on':''}" onclick="setStmtScale('${id}',${val})">${label}</div>`;
+  return `<div class="card" style="margin-bottom:12px;">
+    <h3 style="color:var(--mustard-light); font-size:.95rem; margin:0 0 10px;">⚙️ Configurações do extrato</h3>
+    <label>Tamanho do texto</label>
+    <div class="chip-select">
+      ${scaleChip(1,'Normal')}${scaleChip(1.25,'Grande')}${scaleChip(1.5,'Muito grande')}${scaleChip(1.85,'Máximo')}
+    </div>
+    <label>Cor de fundo</label>
+    <input type="color" value="${p.bg}" onchange="setStmtColor('${id}','bg',this.value)" style="height:42px; padding:4px; cursor:pointer;">
+    <label>Cor do texto (nome dos produtos)</label>
+    <input type="color" value="${p.text}" onchange="setStmtColor('${id}','text',this.value)" style="height:42px; padding:4px; cursor:pointer;">
+    <label>Cor do preço</label>
+    <input type="color" value="${p.price}" onchange="setStmtColor('${id}','price',this.value)" style="height:42px; padding:4px; cursor:pointer;">
+    <button class="btn-ghost" style="width:100%; margin-top:10px;" onclick="resetStmtPrefs('${id}')">Restaurar padrão</button>
+  </div>`;
+}
 function abrirExtratoCliente(id){
   const html = buildClientStatementHtml(id);
   if(!html){ toast('Cliente não encontrado'); return; }
   openFullscreenView(`
+    <button class="btn-ghost" style="width:100%; margin-bottom:10px;" onclick="toggleStmtSettings('${id}')">⚙️ ${stmtSettingsOpen?'Fechar configurações':'Configurações do extrato'}</button>
+    ${stmtSettingsOpen ? buildStmtSettingsPanel(id) : ''}
     <div class="row" style="margin-bottom:12px;">
       <button class="btn-ghost" onclick="downloadStatementImage('${id}')">⬇ Baixar imagem</button>
       <button class="btn-main" style="margin-top:0;" onclick="shareStatementImage('${id}')">📤 Compartilhar</button>
@@ -971,7 +1027,7 @@ function loadDefaultProducts(){
   renderProdutosLista();
 }
 
-const DEFAULT_CLIENTS = ["Alexandre Lava-Jato", "Alexsandro Vendedor (Alê)", "Anízia", "Arcádia", "Bianca", "Camila", "Carol", "Cássia", "César", "Gabriela", "Geovana", "Gleison", "Gustavo", "Halison", "Honorato", "Jardel", "Jenifer", "João Victor", "Letícia", "Lorena", "Lívia", "Manuel", "Marcelo", "Meire", "Mirela", "Mônica", "Natália", "Nilson", "Raquel", "Ricardo", "Sandra", "Sarah", "Seu Edilson", "Vanessa", "Victor", "Wedson", "Wilker Lima", "Wilkie Mendes", "Ítalo"];
+const DEFAULT_CLIENTS = ["Alexandre", "Alexsandro (Alê)", "Anízia", "Arcádia", "Bianca", "Camila", "Carol", "Cássia", "César", "Gabriela", "Geovana", "Gleison", "Gustavo", "Halison", "Honorato", "Jardel", "Jenifer", "João Victor", "Letícia", "Lorena", "Lívia", "Manuel", "Marcelo", "Meire", "Mirela", "Mônica", "Natália", "Nilson", "Raquel", "Ricardo", "Sandra", "Sarah", "Seu Edilson", "Vanessa", "Victor", "Wedson", "Wilker Lima", "Wilkie Mendes", "Ítalo"];
 function loadDefaultClients(){
   if(!confirm(`Isso vai cadastrar os ${DEFAULT_CLIENTS.length} clientes da sua lista, todos com conta zerada.\n\nQuem já existir com o mesmo nome é ignorado (não duplica, não mexe na dívida de quem já tem). Produtos e pedidos não são afetados.\n\nContinuar?`)) return;
   const existentes = new Set(DB.clients.map(c=>c.name.trim().toLowerCase()));
@@ -1166,6 +1222,28 @@ function renderClientesLista(filter){
   }).join('');
 }
 
+async function renomearCliente(id){
+  try{
+    const c = DB.clients.find(x=>x.id===id);
+    if(!c) return;
+    const novo = prompt('Novo nome:', c.name);
+    if(novo === null) return;
+    const nomeLimpo = novo.trim();
+    if(!nomeLimpo){ toast('Nome não pode ficar vazio'); return; }
+    const antigo = c.name;
+    c.name = nomeLimpo;
+    const ok = persist();
+    if(!ok){ toast('Erro ao salvar!'); return; }
+    logActivity(`Cliente renomeado: ${antigo} → ${nomeLimpo}`, '✏️');
+    toast('Nome atualizado');
+    abrirCliente(id);
+    renderClientesLista();
+    renderInicio();
+  }catch(err){
+    console.error('Erro ao renomear:', err);
+    toast('Erro inesperado — veja o console');
+  }
+}
 function abrirCliente(id){
   const c = DB.clients.find(x=>x.id===id);
   if(!c) return;
@@ -1173,7 +1251,8 @@ function abrirCliente(id){
   const adjustments = clientAdjustments(id);
   const debt = clientDebt(id);
   let body = `<button class="modal-close" onclick="closeModal()">✕</button>
-    <h2>${escapeHtml(c.name)}</h2>
+    <h2 style="display:inline;">${escapeHtml(c.name)}</h2>
+    <button class="btn-ghost btn-small" style="margin-left:6px;" onclick="renomearCliente('${id}')">✏️ Renomear</button>
     <div class="list-item"><span>Total em aberto</span><span class="money owe" style="font-size:1.3rem;">${brl(debt)}</span></div>
     <div class="row">
       <button class="btn-main" style="margin-top:0;" onclick="abrirExtratoCliente('${id}')">📄 Extrato completo</button>
