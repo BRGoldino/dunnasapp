@@ -207,13 +207,13 @@
     font-family:Georgia,serif; font-weight:700; color:#333; font-size:1em;
     padding-bottom:6px; margin-bottom:4px; border-bottom:1px solid #e2d5b8;
   }
-  .statement-day-total{color:var(--stmt-price,#a54a2a); font-size:1.1em;}
+  .statement-day-total{font-size:1.1em; font-weight:700;}
   .statement-item{
     display:flex; justify-content:space-between; align-items:baseline;
     padding:4px 0; font-size:.86em;
   }
-  .statement-item-name{color:var(--stmt-text,#3a2f22);}
-  .statement-item-price{color:var(--stmt-price,#a54a2a); font-weight:700; white-space:nowrap; margin-left:10px;}
+  .statement-item-name{font-family:Georgia,serif; font-weight:600;}
+  .statement-item-price{font-weight:700; white-space:nowrap; margin-left:10px;}
   .menu-item-wrap{margin-bottom:2px;}
   .menu-item-desc{font-size:.7rem; color:#7a6a55; font-style:italic; margin:-4px 0 4px;}
 
@@ -525,6 +525,8 @@
       <h2>Notas de atualização</h2>
       <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mais recente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0 0 12px;">
+        <li>Corrigido: painel de configurações do extrato não abre mais sozinho — só quando você toca no botão</li>
+        <li>Cor do texto/preço do extrato agora aplicada direto (sem depender de herança de CSS), resolvendo o problema de ficar "apagado" mesmo escolhendo preto</li>
         <li>Extrato agora tem configurações próprias (botão "⚙️ Configurações do extrato" na tela cheia) — tamanho de letra, cor de fundo, cor do texto e cor do preço, tudo independente do tamanho de letra geral do app</li>
         <li>Extrato vem por padrão em tamanho "Muito grande" e com cores mais visíveis (texto e preço menos apagados)</li>
         <li>Corrigido: preço não quebra mais de linha estranhamente no cardápio em fontes grandes</li>
@@ -832,11 +834,11 @@ function buildClientStatementHtml(id){
         const o = e.data;
         const soma = o.items.reduce((s,it)=>s+it.price*it.qty,0);
         html += `<div class="statement-day">
-          <div class="statement-day-header"><span>${fmtDate(o.date)}</span><span class="statement-day-total">${brl(soma)}</span></div>`;
+          <div class="statement-day-header"><span>${fmtDate(o.date)}</span><span class="statement-day-total" style="color:${prefs.price};">${brl(soma)}</span></div>`;
         o.items.forEach(it=>{
           html += `<div class="statement-item" style="opacity:${it.paid?0.5:1};">
-            <span class="statement-item-name">${it.qty}x ${escapeHtml(it.name)}${it.paid?' <em>(pago)</em>':''}</span>
-            <span class="statement-item-price">${brl(it.price*it.qty)}</span>
+            <span class="statement-item-name" style="color:${prefs.text};">${it.qty}x ${escapeHtml(it.name)}${it.paid?' <em>(pago)</em>':''}</span>
+            <span class="statement-item-price" style="color:${prefs.price};">${brl(it.price*it.qty)}</span>
           </div>`;
         });
         html += '</div>';
@@ -844,7 +846,7 @@ function buildClientStatementHtml(id){
         const a = e.data;
         html += `<div class="statement-day" style="background:#f0e6d8;">
           <div class="statement-day-header" style="font-size:.85rem;">
-            <span>${fmtDate(a.date)} — ${a.type==='debit'?'Valor adicionado':'Pagamento recebido'}${a.note?': '+escapeHtml(a.note):''}</span>
+            <span style="color:${prefs.text};">${fmtDate(a.date)} — ${a.type==='debit'?'Valor adicionado':'Pagamento recebido'}${a.note?': '+escapeHtml(a.note):''}</span>
             <span class="statement-day-total" style="color:${a.type==='debit'?'#a54a2a':'#5c6b3f'};">${a.type==='debit'?'+':'−'}${brl(a.amount)}</span>
           </div>
         </div>`;
@@ -855,7 +857,7 @@ function buildClientStatementHtml(id){
   return html;
 }
 const STMT_PREFS_KEY = 'dunnas_stmt_prefs';
-const STMT_DEFAULTS = { scale:1.5, bg:'#f2e9d8', text:'#3a2f22', price:'#a54a2a' };
+const STMT_DEFAULTS = { scale:1.5, bg:'#f2e9d8', text:'#161310', price:'#8a3410' };
 function getStmtPrefs(){
   try{ return Object.assign({}, STMT_DEFAULTS, JSON.parse(localStorage.getItem(STMT_PREFS_KEY)||'{}')); }
   catch(e){ return Object.assign({}, STMT_DEFAULTS); }
@@ -882,7 +884,7 @@ function resetStmtPrefs(id){
 function refreshExtratoView(id){
   const overlay = document.querySelector('.fullscreen-view-overlay');
   if(overlay) overlay.remove();
-  abrirExtratoCliente(id);
+  abrirExtratoCliente(id, true);
 }
 function buildStmtSettingsPanel(id){
   const p = getStmtPrefs();
@@ -902,7 +904,8 @@ function buildStmtSettingsPanel(id){
     <button class="btn-ghost" style="width:100%; margin-top:10px;" onclick="resetStmtPrefs('${id}')">Restaurar padrão</button>
   </div>`;
 }
-function abrirExtratoCliente(id){
+function abrirExtratoCliente(id, manterEstadoPainel){
+  if(!manterEstadoPainel) stmtSettingsOpen = false;
   const html = buildClientStatementHtml(id);
   if(!html){ toast('Cliente não encontrado'); return; }
   openFullscreenView(`
