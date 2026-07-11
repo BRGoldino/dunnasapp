@@ -67,6 +67,32 @@
     margin-bottom:12px;
   }
   .card h2{font-size:1.05rem; color:var(--mustard-light); border-bottom:1px dashed var(--line); padding-bottom:8px; margin-bottom:10px;}
+
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .stat-tile{
+    display:flex; align-items:center; gap:10px;
+    background:var(--umber); border:1px solid var(--line); border-radius:10px;
+    padding:12px 10px;
+  }
+  .stat-tile-wide{grid-column:1 / -1;}
+  .stat-tile-icon{font-size:1.5rem; flex-shrink:0; line-height:1;}
+  .stat-tile-text{min-width:0;}
+  .stat-tile-label{font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:var(--paper-dim); margin-bottom:2px;}
+  .stat-tile-value{font-size:1.05rem; font-weight:700; color:var(--paper);}
+
+  .debtor-row{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--umber);}
+  .debtor-row:last-child{border-bottom:none;}
+  .debtor-rank{
+    flex-shrink:0; width:26px; height:26px; border-radius:50%;
+    background:var(--umber-2); border:1px solid var(--line); color:var(--paper-dim);
+    display:flex; align-items:center; justify-content:center; font-size:.78rem; font-weight:700;
+  }
+  .debtor-rank-first{background:var(--mustard); border-color:var(--mustard); color:var(--ink);}
+  .debtor-info{flex:1; min-width:0;}
+  .debtor-top-line{display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:4px;}
+  .debtor-name{font-weight:700; color:var(--paper); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .debtor-bar-bg{background:var(--umber-2); border-radius:4px; height:6px; overflow:hidden;}
+  .debtor-bar-fill{background:var(--rust); height:100%; border-radius:4px;}
   label{display:block; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--paper-dim); margin:10px 0 4px;}
   input, select{
     width:100%; background:var(--umber); color:var(--paper);
@@ -222,6 +248,12 @@
   .stat-bar-bg{background:var(--umber); border-radius:4px; height:10px; overflow:hidden;}
   .stat-bar-fill{background:var(--mustard); height:100%;}
 
+  .stats-summary-card{padding:16px;}
+  .stats-summary-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .stats-summary-item{text-align:center;}
+  .stats-summary-label{font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; color:var(--paper-dim); margin-bottom:4px;}
+  .stats-summary-value{font-size:1.25rem; font-weight:700; color:var(--mustard-light);}
+
   .toast{
     position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
     background:var(--mustard); color:var(--ink); padding:9px 16px; border-radius:20px;
@@ -284,10 +316,50 @@
   <section id="tab-inicio" class="active">
     <div class="card">
       <h2>Resumo</h2>
-      <div class="list-item"><span>Total a receber</span><span class="money owe" id="sumTotalDevido">R$ 0,00</span></div>
-      <div class="list-item"><span>Clientes com fiado ativo</span><span id="sumClientesDevendo">0</span></div>
-      <div class="list-item"><span>Fiado registrado hoje</span><span class="money" id="sumHoje">R$ 0,00</span></div>
-      <div class="list-item"><span>Fiado registrado este mês</span><span class="money" id="sumMes">R$ 0,00</span></div>
+      <div class="stat-grid">
+        <div class="stat-tile stat-tile-wide">
+          <div class="stat-tile-icon">💰</div>
+          <div class="stat-tile-text">
+            <div class="stat-tile-label">Total a receber</div>
+            <div class="stat-tile-value money owe" id="sumTotalDevido">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="stat-tile stat-tile-wide">
+          <div class="stat-tile-icon">👥</div>
+          <div class="stat-tile-text">
+            <div class="stat-tile-label">Clientes com fiado ativo</div>
+            <div class="stat-tile-value" id="sumClientesDevendo">0</div>
+          </div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-icon">📝</div>
+          <div class="stat-tile-text">
+            <div class="stat-tile-label">Fiado hoje</div>
+            <div class="stat-tile-value money" id="sumHoje">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-icon">🗓️</div>
+          <div class="stat-tile-text">
+            <div class="stat-tile-label">Fiado no mês</div>
+            <div class="stat-tile-value money" id="sumMes">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-icon">✅</div>
+          <div class="stat-tile-text">
+            <div class="stat-tile-label">Recebido hoje</div>
+            <div class="stat-tile-value" style="color:#7cb342;" id="sumRecebidoHoje">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-icon">💵</div>
+          <div class="stat-tile-text">
+            <div class="stat-tile-label">Recebido no mês</div>
+            <div class="stat-tile-value" style="color:#7cb342;" id="sumRecebidoMes">R$ 0,00</div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="card">
       <h2>Maiores devedores</h2>
@@ -433,6 +505,46 @@
   <!-- ESTATÍSTICAS -->
   <section id="tab-stats">
     <div class="card">
+      <div class="cal-nav">
+        <button class="btn-small" onclick="statsMudarMes(-1)">‹ Anterior</button>
+        <div class="cal-title" id="statsMonthTitle"></div>
+        <button class="btn-small" onclick="statsMudarMes(1)">Próximo ›</button>
+      </div>
+    </div>
+
+    <div class="card stats-summary-card">
+      <div class="stats-summary-grid">
+        <div class="stats-summary-item">
+          <div class="stats-summary-label">Fiado no mês</div>
+          <div class="stats-summary-value" id="statsFiadoMes">R$ 0,00</div>
+        </div>
+        <div class="stats-summary-item">
+          <div class="stats-summary-label">Recebido no mês</div>
+          <div class="stats-summary-value" style="color:#7cb342;" id="statsRecebidoMes">R$ 0,00</div>
+        </div>
+        <div class="stats-summary-item">
+          <div class="stats-summary-label">Ticket médio</div>
+          <div class="stats-summary-value" style="color:var(--paper);" id="statsTicketMedio">R$ 0,00</div>
+        </div>
+        <div class="stats-summary-item">
+          <div class="stats-summary-label">Fiados no mês</div>
+          <div class="stats-summary-value" style="color:var(--paper);" id="statsQtdFiados">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Fiado por dia</h2>
+      <canvas id="statsDailyChart" style="width:100%; height:170px; display:block;"></canvas>
+      <div id="statsBestDay" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card">
+      <h2>Faturamento por categoria</h2>
+      <div id="statCategorias"></div>
+    </div>
+
+    <div class="card">
       <h2>Produtos mais vendidos</h2>
       <div id="statProdutos"></div>
     </div>
@@ -525,50 +637,22 @@
       <h2>Notas de atualização</h2>
       <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mais recente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0 0 12px;">
+        <li>Aba Stats reformulada por completo: navegação por mês, resumo (fiado, recebido, ticket médio, quantidade), gráfico de barras do faturamento por dia, destaque do melhor dia do mês (com % do total), faturamento por categoria — tudo com gráficos de verdade</li>
+        <li>Cor e tamanho do nome do cliente agora personalizáveis nas configurações do extrato</li>
+        <li>Backup automático já vem ativado de fábrica: celular a cada 6h, Discord a cada 1h (mesmo sem link configurado ainda)</li>
         <li>Corrigido: painel de configurações do extrato não abre mais sozinho — só quando você toca no botão</li>
-        <li>Cor do texto/preço do extrato agora aplicada direto (sem depender de herança de CSS), resolvendo o problema de ficar "apagado" mesmo escolhendo preto</li>
-        <li>Extrato agora tem configurações próprias (botão "⚙️ Configurações do extrato" na tela cheia) — tamanho de letra, cor de fundo, cor do texto e cor do preço, tudo independente do tamanho de letra geral do app</li>
-        <li>Extrato vem por padrão em tamanho "Muito grande" e com cores mais visíveis (texto e preço menos apagados)</li>
-        <li>Corrigido: preço não quebra mais de linha estranhamente no cardápio em fontes grandes</li>
-        <li>Nova função "Renomear cliente" na ficha do cliente</li>
-        <li>Extrato do cliente reformulado: cada dia agora é um bloco próprio, com o total do dia em destaque separado do preço de cada item — mais fácil de ler, sem ficar tudo do mesmo tamanho</li>
-        <li>Corrigido: cardápio e seleção de produtos no fiado agora ordenam por preço (menor pro maior) dentro de cada categoria, não mais por nome</li>
-        <li>Preços destacados com cor mais forte no cardápio e no extrato do cliente, pra ficar mais fácil de ver</li>
-        <li>Botão "Habilitar clientes padrão" em Configurações — cadastra de uma vez a lista de clientes conhecidos, todos com conta zerada</li>
-        <li>Quitar tudo de um dia com um toque, em vez de item por item</li>
-        <li>Botão "Zerar conta" — marca a dívida inteira do cliente como paga de uma vez, com confirmação dupla</li>
-        <li>"Limpar histórico" do cliente — apaga pedidos/ajustes antigos mantendo o cliente cadastrado, só libera depois que a conta estiver zerada</li>
-        <li>Config → Zona de risco: opção de resetar o app inteiro (clientes, produtos, pedidos, tudo), com confirmação bem forte</li>
-        <li>Corrigido de vez: as abas embaixo não espremem mais o texto uma em cima da outra — cada aba mantém seu tamanho natural e a barra rola de lado quando não cabe tudo</li>
-        <li>Pinça pra dar zoom na tela (afastar/aproximar os dedos) voltou a funcionar — estava bloqueada sem querer</li>
-        <li>Corrigido: menu de abas embaixo não fica mais ilegível/colado em fontes grandes — o tamanho dele agora é fixo, só o conteúdo das telas acompanha o "Tamanho da letra"</li>
-        <li>Aba ativa agora fica bem mais visível (barra colorida em cima, fundo destacado, ícone maior)</li>
-        <li>Botões de produto e de quantidade ajustados pra acompanhar melhor o tamanho da letra escolhido, sem ficar desalinhado</li>
-        <li>Tela de revisão antes de confirmar um fiado — mostra cliente, produtos e total antes de registrar de verdade (dá pra desligar em Config)</li>
-        <li>Frequência do backup no Discord agora é separada da do celular — dá pra deixar o Discord de 1 em 1 hora, por exemplo, mesmo mantendo o celular em 24h</li>
-        <li>Carrinho do fiado com barra fixa no rodapé (igual apps de delivery) — sempre visível com contador e total, sem precisar rolar a tela pra confirmar que adicionou</li>
-        <li>Opções de desenvolvedor: envio automático de cópia do backup pra um canal do Discord (opcional, configurado por link de webhook)</li>
-        <li>Link do webhook fica oculto depois de salvo — mostra só "Webhook 1 · conectado", precisa clicar em "Trocar link" pra ver o campo de novo</li>
-        <li>Backup automático — escolha em Config pra baixar sozinho a cada 6h, 12h ou 24h</li>
-        <li>Botão "Habilitar produtos padrão" em Configurações — carrega o cardápio inteiro da Dunnas com um toque, sem precisar importar arquivo</li>
-        <li>"Importar produtos" agora também atualiza o preço de produtos já existentes, além de adicionar os novos</li>
-        <li>Vírgula automática também no valor de ajuste manual da conta (antes só valia pro preço de produto)</li>
-        <li>Correção no botão de excluir pedido inteiro e no de remover cliente</li>
-        <li>Remover cliente ficou mais simples de confirmar (sem precisar digitar texto exato)</li>
-        <li>Nomes mais claros: "Valor adicionado à conta" e "Pagamento recebido" no lugar de termos técnicos</li>
-        <li>Categorias com letra maior e mais espaçadas, principalmente no cardápio</li>
+        <li>Cor do texto/preço do extrato agora aplicada direto, resolvendo o problema de ficar "apagado" mesmo escolhendo preto</li>
+        <li>Extrato com configurações próprias (tamanho, cor de fundo, cor do texto, cor do preço), independente do tamanho de letra geral do app</li>
       </ul>
       <p style="font-size:.8rem; color:var(--paper-dim); margin:0 0 4px;">Anteriormente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0;">
-        <li>Ajuste manual de dívida (fora de pedidos por produto)</li>
-        <li>Categorias fixas do refeitório + categoria personalizada</li>
-        <li>Seleção de produtos por categoria com busca</li>
-        <li>Confirmação animada ao registrar um fiado ou mudar a conta</li>
-        <li>Extrato do cliente em tela cheia, com opção de baixar/compartilhar</li>
-        <li>Tela cheia, baixar e imprimir no cardápio</li>
-        <li>Temas de cor e personalização de ícone/nome do app</li>
-        <li>Cópia de segurança em texto (.txt), além do .json</li>
-        <li>Aba de Atividade recente e ajuste de tamanho de letra</li>
+        <li><strong>Extrato:</strong> reformulado em blocos por dia, preços destacados, tela cheia com baixar/compartilhar imagem</li>
+        <li><strong>Cardápio:</strong> ordenado por preço dentro de cada categoria, tela cheia, baixar e imprimir, preços destacados</li>
+        <li><strong>Fiado:</strong> carrinho com barra fixa no rodapé, tela de revisão antes de confirmar, seleção de produtos por categoria com busca, vírgula automática no preço</li>
+        <li><strong>Clientes:</strong> renomear, zerar conta, quitar o dia inteiro com um toque, limpar histórico antigo, remoção com confirmação mais simples, ajuste manual de dívida com nomes claros ("valor adicionado"/"pagamento recebido")</li>
+        <li><strong>Produtos:</strong> importar/atualizar em lote por arquivo, botões de "produtos padrão" e "clientes padrão" prontos</li>
+        <li><strong>Configurações:</strong> temas de cor, ícone/nome do app personalizável, tamanho de letra, backup automático separado por celular/Discord, link do webhook oculto, cópia de segurança em texto, zona de risco pra resetar tudo</li>
+        <li><strong>Geral:</strong> menu de abas corrigido (não espreme mais o texto), aba ativa bem mais visível, zoom liberado, aba de Atividade recente</li>
       </ul>
     </div>
 
@@ -819,7 +903,7 @@ function buildClientStatementHtml(id){
   adjustments.forEach(a=>entries.push({date:a.date, type:'adj', data:a}));
   entries.sort((a,b)=> a.date<b.date?1:-1);
   let html = `<div class="menu-sheet" id="clientStatementSheet" style="background:${prefs.bg}; font-size:${Math.round(16*prefs.scale)}px; --stmt-text:${prefs.text}; --stmt-price:${prefs.price};">
-    <h2>${escapeHtml(c.name)}</h2>
+    <h2 style="color:${prefs.nameColor}; font-size:${prefs.nameScale}em;">${escapeHtml(c.name)}</h2>
     <div style="text-align:center; font-size:.72em; color:#888; margin-bottom:12px;">Extrato gerado em ${fmtDate(todayISO())} · Dunnas Alimentação Corporativa</div>
     <div style="text-align:center; margin:10px 0 18px;">
       <div style="font-size:.68em; text-transform:uppercase; letter-spacing:.1em; color:#888;">Total em aberto</div>
@@ -857,7 +941,7 @@ function buildClientStatementHtml(id){
   return html;
 }
 const STMT_PREFS_KEY = 'dunnas_stmt_prefs';
-const STMT_DEFAULTS = { scale:1.5, bg:'#f2e9d8', text:'#161310', price:'#8a3410' };
+const STMT_DEFAULTS = { scale:1.5, bg:'#f2e9d8', text:'#161310', price:'#8a3410', nameColor:'#a54a2a', nameScale:1.5 };
 function getStmtPrefs(){
   try{ return Object.assign({}, STMT_DEFAULTS, JSON.parse(localStorage.getItem(STMT_PREFS_KEY)||'{}')); }
   catch(e){ return Object.assign({}, STMT_DEFAULTS); }
@@ -870,6 +954,10 @@ function toggleStmtSettings(id){
 }
 function setStmtScale(id, scale){
   const p = getStmtPrefs(); p.scale = scale; saveStmtPrefs(p);
+  refreshExtratoView(id);
+}
+function setStmtNameScale(id, scale){
+  const p = getStmtPrefs(); p.nameScale = scale; saveStmtPrefs(p);
   refreshExtratoView(id);
 }
 function setStmtColor(id, key, value){
@@ -889,6 +977,7 @@ function refreshExtratoView(id){
 function buildStmtSettingsPanel(id){
   const p = getStmtPrefs();
   const scaleChip = (val,label) => `<div class="chip ${p.scale===val?'on':''}" onclick="setStmtScale('${id}',${val})">${label}</div>`;
+  const nameScaleChip = (val,label) => `<div class="chip ${p.nameScale===val?'on':''}" onclick="setStmtNameScale('${id}',${val})">${label}</div>`;
   return `<div class="card" style="margin-bottom:12px;">
     <h3 style="color:var(--mustard-light); font-size:.95rem; margin:0 0 10px;">⚙️ Configurações do extrato</h3>
     <label>Tamanho do texto</label>
@@ -901,6 +990,12 @@ function buildStmtSettingsPanel(id){
     <input type="color" value="${p.text}" onchange="setStmtColor('${id}','text',this.value)" style="height:42px; padding:4px; cursor:pointer;">
     <label>Cor do preço</label>
     <input type="color" value="${p.price}" onchange="setStmtColor('${id}','price',this.value)" style="height:42px; padding:4px; cursor:pointer;">
+    <label>Cor do nome do cliente</label>
+    <input type="color" value="${p.nameColor}" onchange="setStmtColor('${id}','nameColor',this.value)" style="height:42px; padding:4px; cursor:pointer;">
+    <label>Tamanho do nome do cliente</label>
+    <div class="chip-select">
+      ${nameScaleChip(1.2,'Normal')}${nameScaleChip(1.5,'Grande')}${nameScaleChip(1.8,'Muito grande')}${nameScaleChip(2.2,'Máximo')}
+    </div>
     <button class="btn-ghost" style="width:100%; margin-top:10px;" onclick="resetStmtPrefs('${id}')">Restaurar padrão</button>
   </div>`;
 }
@@ -972,6 +1067,25 @@ function allOrdersFor(clientId){
 }
 
 /* ---------- INÍCIO ---------- */
+function computeReceivedTotals(){
+  const hoje = todayISO();
+  const mesRef = hoje.slice(0,7);
+  let hojeTotal = 0, mesTotal = 0;
+  DB.orders.forEach(o=>{
+    o.items.forEach(it=>{
+      if(!it.paid || !it.paidDate) return;
+      const valor = it.price*it.qty;
+      if(it.paidDate===hoje) hojeTotal += valor;
+      if(it.paidDate.slice(0,7)===mesRef) mesTotal += valor;
+    });
+  });
+  DB.adjustments.forEach(a=>{
+    if(a.type!=='credit') return;
+    if(a.date===hoje) hojeTotal += a.amount;
+    if(a.date && a.date.slice(0,7)===mesRef) mesTotal += a.amount;
+  });
+  return { hoje: hojeTotal, mes: mesTotal };
+}
 function renderInicio(){
   const total = DB.clients.reduce((s,c)=>s+clientDebt(c.id),0);
   document.getElementById('sumTotalDevido').textContent = brl(total);
@@ -989,12 +1103,23 @@ function renderInicio(){
   document.getElementById('sumHoje').textContent = brl(vendHoje);
   document.getElementById('sumMes').textContent = brl(vendMes);
 
+  const recebido = computeReceivedTotals();
+  document.getElementById('sumRecebidoHoje').textContent = brl(recebido.hoje);
+  document.getElementById('sumRecebidoMes').textContent = brl(recebido.mes);
+
   const ranked = DB.clients.map(c=>({c, d:clientDebt(c.id)})).filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,5);
   const box = document.getElementById('topDevedores');
-  box.innerHTML = ranked.length ? ranked.map(x=>`
-    <div class="list-item">
-      <span class="name">${escapeHtml(x.c.name)}</span>
-      <span class="money owe">${brl(x.d)}</span>
+  const maxDebt = ranked.length ? ranked[0].d : 1;
+  box.innerHTML = ranked.length ? ranked.map((x,i)=>`
+    <div class="debtor-row">
+      <div class="debtor-rank ${i===0?'debtor-rank-first':''}">${i+1}</div>
+      <div class="debtor-info">
+        <div class="debtor-top-line">
+          <span class="debtor-name">${escapeHtml(x.c.name)}</span>
+          <span class="money owe">${brl(x.d)}</span>
+        </div>
+        <div class="debtor-bar-bg"><div class="debtor-bar-fill" style="width:${(x.d/maxDebt*100)}%;"></div></div>
+      </div>
     </div>`).join('') : '<div class="empty">Ninguém deve nada no momento 🎉</div>';
   renderAtividadePreview();
 }
@@ -1377,7 +1502,7 @@ async function quitarPedidoInteiro(orderId){
     const oldTotal = clientDebt(clientId);
     const totalDoDia = itensAbertos.reduce((s,it)=>s+it.price*it.qty,0);
     if(!confirm(`Marcar todos os ${itensAbertos.length} item(ns) de ${fmtDate(o.date)} (${brl(totalDoDia)}) como pagos?`)) return;
-    o.items.forEach(it=>{ it.paid = true; });
+    o.items.forEach(it=>{ it.paid = true; it.paidDate = todayISO(); });
     const ok = persist();
     if(!ok){ toast('Erro ao salvar!'); return; }
     const newTotal = clientDebt(clientId);
@@ -1400,7 +1525,7 @@ async function zerarContaCliente(clientId){
     if(!confirm(`Marcar TODA a conta de ${cli.name} como paga?\n\nValor atual: ${brl(oldTotal)}\n\nIsso vai quitar todos os produtos em aberto e neutralizar qualquer valor pendente de ajuste manual. O histórico não é apagado, só marcado como pago.`)) return;
     if(!confirm(`Confirma mesmo? ${cli.name} pagou os ${brl(oldTotal)} que devia?`)) return;
     DB.orders.filter(o=>o.clientId===clientId).forEach(o=>{
-      o.items.forEach(it=>{ it.paid = true; });
+      o.items.forEach(it=>{ it.paid = true; it.paidDate = todayISO(); });
     });
     const restante = clientDebt(clientId);
     if(restante > 0.004){
@@ -1453,6 +1578,7 @@ async function toggleItemPago(orderId, itemId){
   const clientId = o.clientId;
   const oldTotal = clientDebt(clientId);
   it.paid = !it.paid;
+  it.paidDate = it.paid ? todayISO() : null;
   await saveOrders();
   const cli = DB.clients.find(x=>x.id===clientId);
   const newTotal = clientDebt(clientId);
@@ -1794,17 +1920,119 @@ function downloadCardapioImage(){
 }
 
 /* ---------- ESTATÍSTICAS ---------- */
+let statsRef = new Date();
+function statsMudarMes(delta){
+  statsRef.setMonth(statsRef.getMonth()+delta);
+  renderStats();
+}
+function setupCanvas(canvas, cssHeight){
+  const ratio = window.devicePixelRatio || 1;
+  const cssWidth = canvas.parentElement.clientWidth;
+  canvas.width = cssWidth * ratio;
+  canvas.height = cssHeight * ratio;
+  canvas.style.width = cssWidth+'px';
+  canvas.style.height = cssHeight+'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(ratio, ratio);
+  return { ctx, w: cssWidth, h: cssHeight };
+}
+function drawBarChart(canvas, data, opts={}){
+  const cssHeight = opts.height || 150;
+  const { ctx, w, h } = setupCanvas(canvas, cssHeight);
+  ctx.clearRect(0,0,w,h);
+  if(!data.length) return;
+  const max = Math.max(1, ...data.map(d=>d.value));
+  const bottomPad = 18;
+  const gap = 2;
+  const barW = Math.max(1, (w - gap*(data.length+1)) / data.length);
+  data.forEach((d,i)=>{
+    const barH = d.value>0 ? Math.max(2, (d.value/max) * (h-bottomPad-6)) : 0;
+    const x = gap + i*(barW+gap);
+    const y = h - barH - bottomPad;
+    ctx.fillStyle = d.highlight ? '#c99a2e' : '#5c6b3f';
+    const r = Math.min(2, barW/2);
+    ctx.beginPath();
+    ctx.moveTo(x, y+barH);
+    ctx.lineTo(x, y+r);
+    ctx.arcTo(x, y, x+barW, y, r);
+    ctx.arcTo(x+barW, y, x+barW, y+r, r);
+    ctx.lineTo(x+barW, y+barH);
+    ctx.closePath();
+    ctx.fill();
+    if(d.label){
+      ctx.fillStyle = '#cfc2a2';
+      ctx.font = '9px Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(d.label, x+barW/2, h-5);
+    }
+  });
+}
 function renderStats(){
-  const qtyByProduct = {};
-  const countByClient = {};
-  const valueByClient = {};
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const y = statsRef.getFullYear(), m = statsRef.getMonth();
+  document.getElementById('statsMonthTitle').textContent = meses[m]+' '+y;
+  const anoMes = `${y}-${String(m+1).padStart(2,'0')}`;
+  const monthOrders = DB.orders.filter(o=>o.date.slice(0,7)===anoMes);
+
+  let fiadoMes = 0;
+  monthOrders.forEach(o=> o.items.forEach(it=>{ fiadoMes += it.price*it.qty; }));
+
+  let recebidoMes = 0;
   DB.orders.forEach(o=>{
-    countByClient[o.clientId] = (countByClient[o.clientId]||0)+1;
     o.items.forEach(it=>{
-      qtyByProduct[it.name] = (qtyByProduct[it.name]||0)+it.qty;
-      valueByClient[o.clientId] = (valueByClient[o.clientId]||0)+it.price*it.qty;
+      if(it.paid && it.paidDate && it.paidDate.slice(0,7)===anoMes) recebidoMes += it.price*it.qty;
     });
   });
+  DB.adjustments.forEach(a=>{
+    if(a.type==='credit' && a.date && a.date.slice(0,7)===anoMes) recebidoMes += a.amount;
+  });
+
+  const qtdFiados = monthOrders.length;
+  const ticketMedio = qtdFiados>0 ? fiadoMes/qtdFiados : 0;
+  document.getElementById('statsFiadoMes').textContent = brl(fiadoMes);
+  document.getElementById('statsRecebidoMes').textContent = brl(recebidoMes);
+  document.getElementById('statsTicketMedio').textContent = brl(ticketMedio);
+  document.getElementById('statsQtdFiados').textContent = qtdFiados;
+
+  const diasNoMes = new Date(y, m+1, 0).getDate();
+  const revenueByDay = {};
+  monthOrders.forEach(o=>{
+    const dia = parseInt(o.date.slice(8,10),10);
+    const soma = o.items.reduce((s,it)=>s+it.price*it.qty,0);
+    revenueByDay[dia] = (revenueByDay[dia]||0)+soma;
+  });
+  let melhorDia=null, melhorValor=0;
+  Object.entries(revenueByDay).forEach(([dia,val])=>{ if(val>melhorValor){ melhorValor=val; melhorDia=parseInt(dia,10); } });
+  const chartData = [];
+  for(let d=1; d<=diasNoMes; d++){
+    chartData.push({ label: (d===1||d===diasNoMes||d%5===0) ? String(d) : '', value: revenueByDay[d]||0, highlight: d===melhorDia });
+  }
+  drawBarChart(document.getElementById('statsDailyChart'), chartData, {height:170});
+  const bestDayEl = document.getElementById('statsBestDay');
+  if(melhorDia){
+    const pct = fiadoMes>0 ? (melhorValor/fiadoMes*100) : 0;
+    bestDayEl.innerHTML = `<div class="list-item"><span>📈 Melhor dia do mês</span><span class="money">${String(melhorDia).padStart(2,'0')}/${String(m+1).padStart(2,'0')} — ${brl(melhorValor)} (${pct.toFixed(0)}% do mês)</span></div>`;
+  } else {
+    bestDayEl.innerHTML = '<div class="empty">Sem fiados registrados nesse mês ainda.</div>';
+  }
+
+  const revenueByCategory = {};
+  monthOrders.forEach(o=> o.items.forEach(it=>{
+    const prod = DB.products.find(p=>p.id===it.productId);
+    const cat = prod ? prod.cat : 'Outros';
+    revenueByCategory[cat] = (revenueByCategory[cat]||0) + it.price*it.qty;
+  }));
+  const maxCat = Math.max(1, ...Object.values(revenueByCategory));
+  const catBox = document.getElementById('statCategorias');
+  const catEntries = Object.entries(revenueByCategory).sort((a,b)=>b[1]-a[1]);
+  catBox.innerHTML = catEntries.length ? catEntries.map(([cat,val])=>`
+    <div class="stat-bar-wrap">
+      <div class="stat-bar-label"><span>${escapeHtml(cat)}</span><span>${brl(val)}</span></div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${(val/maxCat*100)}%; background:var(--mustard);"></div></div>
+    </div>`).join('') : '<div class="empty">Sem dados nesse mês.</div>';
+
+  const qtyByProduct = {};
+  monthOrders.forEach(o=> o.items.forEach(it=>{ qtyByProduct[it.name]=(qtyByProduct[it.name]||0)+it.qty; }));
   const maxQty = Math.max(1, ...Object.values(qtyByProduct));
   const prodBox = document.getElementById('statProdutos');
   const prodEntries = Object.entries(qtyByProduct).sort((a,b)=>b[1]-a[1]);
@@ -1812,8 +2040,13 @@ function renderStats(){
     <div class="stat-bar-wrap">
       <div class="stat-bar-label"><span>${escapeHtml(name)}</span><span>${qty}x</span></div>
       <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${(qty/maxQty*100)}%;"></div></div>
-    </div>`).join('') : '<div class="empty">Sem dados ainda.</div>';
+    </div>`).join('') : '<div class="empty">Sem dados nesse mês.</div>';
 
+  const countByClient = {}, valueByClient = {};
+  monthOrders.forEach(o=>{
+    countByClient[o.clientId] = (countByClient[o.clientId]||0)+1;
+    o.items.forEach(it=>{ valueByClient[o.clientId]=(valueByClient[o.clientId]||0)+it.price*it.qty; });
+  });
   const maxCount = Math.max(1, ...Object.values(countByClient));
   const cliBox = document.getElementById('statClientes');
   const cliEntries = Object.entries(countByClient).sort((a,b)=>b[1]-a[1]).map(([id,count])=>{
@@ -1822,9 +2055,9 @@ function renderStats(){
   });
   cliBox.innerHTML = cliEntries.length ? cliEntries.map(e=>`
     <div class="stat-bar-wrap">
-      <div class="stat-bar-label"><span>${escapeHtml(e.name)}</span><span>${e.count} pedidos · ${brl(e.valor)}</span></div>
+      <div class="stat-bar-label"><span>${escapeHtml(e.name)}</span><span>${e.count} fiado(s) · ${brl(e.valor)}</span></div>
       <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${(e.count/maxCount*100)}%; background:var(--olive);"></div></div>
-    </div>`).join('') : '<div class="empty">Sem dados ainda.</div>';
+    </div>`).join('') : '<div class="empty">Sem dados nesse mês.</div>';
 }
 
 function exportBackupTxt(){
@@ -2025,7 +2258,7 @@ async function testDiscordWebhook(){
   }
 }
 async function sendBackupToDiscord(blob, filename){
-  const enabled = localStorage.getItem(DISCORD_ENABLED_KEY) === '1';
+  const enabled = localStorage.getItem(DISCORD_ENABLED_KEY) !== '0';
   const url = localStorage.getItem(DISCORD_WEBHOOK_KEY);
   if(!enabled || !url) return;
   try{
@@ -2058,7 +2291,7 @@ function renderConfig(){
   document.querySelectorAll('#confirmFiadoOptions .chip').forEach(chip=>{
     chip.classList.toggle('on', (chip.dataset.enabled==='1')===confirmFiadoEnabled);
   });
-  const savedAutoBackup = parseFloat(localStorage.getItem(AUTO_BACKUP_KEY) || '0');
+  const savedAutoBackup = parseFloat(localStorage.getItem(AUTO_BACKUP_KEY) || '6');
   document.querySelectorAll('#autoBackupOptions .chip').forEach(chip=>{
     chip.classList.toggle('on', parseFloat(chip.dataset.hours)===savedAutoBackup);
   });
@@ -2074,11 +2307,11 @@ function renderConfig(){
     editView.style.display = 'block';
     if(webhookInput && document.activeElement !== webhookInput) webhookInput.value = '';
   }
-  const discordEnabled = localStorage.getItem(DISCORD_ENABLED_KEY) === '1';
+  const discordEnabled = localStorage.getItem(DISCORD_ENABLED_KEY) !== '0';
   document.querySelectorAll('#discordEnabledOptions .chip').forEach(chip=>{
     chip.classList.toggle('on', (chip.dataset.enabled==='1')===discordEnabled);
   });
-  const savedDiscordHours = parseFloat(localStorage.getItem(DISCORD_BACKUP_HOURS_KEY) || '0');
+  const savedDiscordHours = parseFloat(localStorage.getItem(DISCORD_BACKUP_HOURS_KEY) || '1');
   document.querySelectorAll('#discordIntervalOptions .chip').forEach(chip=>{
     chip.classList.toggle('on', parseFloat(chip.dataset.hours)===savedDiscordHours);
   });
@@ -2124,7 +2357,7 @@ function setAutoBackupInterval(hours){
   renderConfig();
 }
 function checkAutoBackup(){
-  const hours = parseFloat(localStorage.getItem(AUTO_BACKUP_KEY) || '0');
+  const hours = parseFloat(localStorage.getItem(AUTO_BACKUP_KEY) || '6');
   if(hours){
     const lastTs = localStorage.getItem('dunnas_last_backup_ts') || localStorage.getItem('dunnas_last_backup');
     const lastTime = lastTs ? new Date(lastTs).getTime() : 0;
@@ -2143,9 +2376,9 @@ function setDiscordBackupInterval(hours){
   renderConfig();
 }
 function checkDiscordAutoBackup(){
-  const enabled = localStorage.getItem(DISCORD_ENABLED_KEY) === '1';
+  const enabled = localStorage.getItem(DISCORD_ENABLED_KEY) !== '0';
   const webhookUrl = localStorage.getItem(DISCORD_WEBHOOK_KEY);
-  const hours = parseFloat(localStorage.getItem(DISCORD_BACKUP_HOURS_KEY) || '0');
+  const hours = parseFloat(localStorage.getItem(DISCORD_BACKUP_HOURS_KEY) || '1');
   if(!enabled || !webhookUrl || !hours) return;
   const lastTs = localStorage.getItem('dunnas_last_discord_backup_ts');
   const lastTime = lastTs ? new Date(lastTs).getTime() : 0;
