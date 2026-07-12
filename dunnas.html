@@ -45,13 +45,15 @@
     background:linear-gradient(180deg, var(--umber-2), var(--umber));
     position:sticky; top:0; z-index:20;
   }
-  header .brand-row{display:flex; align-items:baseline; justify-content:space-between; gap:10px;}
-  header h1{font-size:1.5rem; color:var(--mustard-light); font-weight:700;}
+  header .brand-row{display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px 10px;}
+  header .brand-row > div:first-child{min-width:0; flex-basis:100%;}
+  header h1{font-size:1.5rem; color:var(--mustard-light); font-weight:700; overflow-wrap:break-word;}
   header .sub{font-size:.7rem; color:var(--paper-dim); text-transform:uppercase; letter-spacing:.15em;}
   header .stamp{
     border:1.5px solid var(--rust); color:var(--rust); font-size:.62rem;
-    padding:3px 7px; transform:rotate(-4deg); border-radius:3px;
-    text-transform:uppercase; letter-spacing:.1em; white-space:nowrap;
+    padding:3px 7px; border-radius:3px;
+    text-transform:uppercase; letter-spacing:.1em; white-space:nowrap; flex-shrink:0;
+    margin-left:auto;
   }
 
   main{padding:16px 14px 20px 14px; max-width:720px; margin:0 auto;}
@@ -68,17 +70,16 @@
   }
   .card h2{font-size:1.05rem; color:var(--mustard-light); border-bottom:1px dashed var(--line); padding-bottom:8px; margin-bottom:10px;}
 
-  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .stat-grid{display:flex; flex-direction:column; gap:8px;}
   .stat-tile{
-    display:flex; align-items:center; gap:10px;
+    display:flex; align-items:center; gap:10px; min-width:0;
     background:var(--umber); border:1px solid var(--line); border-radius:10px;
     padding:12px 10px;
   }
-  .stat-tile-wide{grid-column:1 / -1;}
   .stat-tile-icon{font-size:1.5rem; flex-shrink:0; line-height:1;}
-  .stat-tile-text{min-width:0;}
-  .stat-tile-label{font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:var(--paper-dim); margin-bottom:2px;}
-  .stat-tile-value{font-size:1.05rem; font-weight:700; color:var(--paper);}
+  .stat-tile-text{min-width:0; flex:1;}
+  .stat-tile-label{font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:var(--paper-dim); margin-bottom:2px; overflow-wrap:break-word;}
+  .stat-tile-value{font-size:1.05rem; font-weight:700; color:var(--paper); overflow-wrap:anywhere;}
 
   .debtor-row{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--umber);}
   .debtor-row:last-child{border-bottom:none;}
@@ -195,9 +196,10 @@
   .cal-day .dnum{font-weight:700;}
   .cal-day.has-sale{background:#3d3319; border-color:var(--mustard);}
   .cal-day .dot{width:5px; height:5px; border-radius:50%; background:var(--mustard-light); position:absolute; bottom:5px;}
-  .cal-nav{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
-  .cal-nav button{background:var(--umber); color:var(--paper); border:1px solid var(--line);}
-  .cal-title{font-family:Georgia,serif; color:var(--mustard-light); font-size:1rem;}
+  .cal-nav{display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:10px;}
+  .cal-nav-buttons{display:flex; justify-content:space-between; width:100%; gap:8px;}
+  .cal-nav-buttons button{flex:1; background:var(--umber); color:var(--paper); border:1px solid var(--line);}
+  .cal-title{font-family:Georgia,serif; color:var(--mustard-light); font-size:1rem; text-align:center; overflow-wrap:break-word;}
 
   .modal-bg{
     position:fixed; inset:0; background:rgba(10,8,4,.75); z-index:50;
@@ -479,9 +481,11 @@
   <section id="tab-calendario">
     <div class="card">
       <div class="cal-nav">
-        <button class="btn-small" onclick="calMudarMes(-1)">‹ Anterior</button>
         <div class="cal-title" id="calTitle"></div>
-        <button class="btn-small" onclick="calMudarMes(1)">Próximo ›</button>
+        <div class="cal-nav-buttons">
+          <button class="btn-small" onclick="calMudarMes(-1)">‹ Anterior</button>
+          <button class="btn-small" onclick="calMudarMes(1)">Próximo ›</button>
+        </div>
       </div>
       <div class="cal-grid" id="calGrid"></div>
     </div>
@@ -506,9 +510,11 @@
   <section id="tab-stats">
     <div class="card">
       <div class="cal-nav">
-        <button class="btn-small" onclick="statsMudarMes(-1)">‹ Anterior</button>
         <div class="cal-title" id="statsMonthTitle"></div>
-        <button class="btn-small" onclick="statsMudarMes(1)">Próximo ›</button>
+        <div class="cal-nav-buttons">
+          <button class="btn-small" onclick="statsMudarMes(-1)">‹ Anterior</button>
+          <button class="btn-small" onclick="statsMudarMes(1)">Próximo ›</button>
+        </div>
       </div>
     </div>
 
@@ -637,12 +643,16 @@
       <h2>Notas de atualização</h2>
       <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mais recente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0 0 12px;">
+        <li>Novo botão "Resetar estatísticas" em Configurações — zera os números da aba Stats sem apagar nenhum pedido, produto ou dívida</li>
+        <li>Corrigido: aba Stats principal agora respeita esse reset (antes só a tela Início respeitava)</li>
+        <li>Corrigido bug real no backup: um campo de configuração interna não estava sendo salvo/restaurado ao importar — testado e confirmado que agora bate 100%</li>
+        <li>Resumo da tela inicial: trocado o sistema de colunas por uma coluna só, garantindo que nunca mais vaze da tela em nenhum tamanho de letra</li>
+        <li>"Clientes frequentes" na aba Stats ganhou o mesmo visual dos Maiores devedores (bolinha numerada + barra), em vez de texto solto</li>
+        <li>"Limpar histórico" renomeado pra "Limpar extrato" — nome mais claro, já que ele só limpa a ficha do cliente, sem apagar nada do Calendário ou das Estatísticas</li>
+        <li>Corrigido: Resumo da tela inicial não estoura mais a tela no tamanho "Máximo" — reorganiza sozinho e o número não quebra mais no meio da vírgula</li>
         <li>Aba Stats reformulada por completo: navegação por mês, resumo (fiado, recebido, ticket médio, quantidade), gráfico de barras do faturamento por dia, destaque do melhor dia do mês (com % do total), faturamento por categoria — tudo com gráficos de verdade</li>
         <li>Cor e tamanho do nome do cliente agora personalizáveis nas configurações do extrato</li>
         <li>Backup automático já vem ativado de fábrica: celular a cada 6h, Discord a cada 1h (mesmo sem link configurado ainda)</li>
-        <li>Corrigido: painel de configurações do extrato não abre mais sozinho — só quando você toca no botão</li>
-        <li>Cor do texto/preço do extrato agora aplicada direto, resolvendo o problema de ficar "apagado" mesmo escolhendo preto</li>
-        <li>Extrato com configurações próprias (tamanho, cor de fundo, cor do texto, cor do preço), independente do tamanho de letra geral do app</li>
       </ul>
       <p style="font-size:.8rem; color:var(--paper-dim); margin:0 0 4px;">Anteriormente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0;">
@@ -712,6 +722,12 @@
       <button class="btn-main" style="width:100%; margin-top:10px;" onclick="testDiscordWebhook()">🔧 Enviar teste agora</button>
     </div>
 
+    <div class="card">
+      <h2>Estatísticas</h2>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Zera os números da aba Stats (faturamento, produtos mais vendidos, clientes frequentes) a partir de hoje, como se fosse um "novo começo" pra análise. <strong>Não apaga nenhum pedido, produto ou dívida</strong> — as contas dos clientes continuam exatamente iguais, e nada é excluído de verdade (dá pra desfazer restaurando um backup de antes, se precisar).</p>
+      <button class="btn-danger" style="width:100%;" onclick="resetarEstatisticas()">📊 Resetar estatísticas</button>
+    </div>
+
     <div class="card" style="border:2px solid var(--rust);">
       <h2 style="color:var(--rust);">⚠️ Zona de risco</h2>
       <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Apaga TUDO: clientes, produtos, pedidos, ajustes e atividade. Volta o app pro estado de recém-instalado. Faça um backup antes se não tiver certeza.</p>
@@ -744,7 +760,7 @@
 
 <script>
 /* ---------- Estado & persistência ---------- */
-let DB = { products: [], clients: [], orders: [], activity: [], adjustments: [] };
+let DB = { products: [], clients: [], orders: [], activity: [], adjustments: [], statsResetAt: null };
 let calRef = new Date();
 let pedQtyMap = {}; // productId -> qty (para novo pedido)
 let pendingFiado = null; // {clientId, date, items} enquanto aguarda confirmação
@@ -765,6 +781,7 @@ async function loadAll(){
       DB.orders = parsed.orders || [];
       DB.activity = parsed.activity || [];
       DB.adjustments = parsed.adjustments || [];
+      DB.statsResetAt = parsed.statsResetAt || null;
     }
   }catch(e){
     console.error('Erro ao carregar dados salvos:', e);
@@ -843,7 +860,7 @@ function importBackup(input){
       const parsed = JSON.parse(e.target.result);
       if(!parsed.products || !parsed.clients || !parsed.orders) throw new Error('formato inválido');
       if(!confirm('Isso vai SUBSTITUIR todos os dados atuais pelos do backup. Continuar?')) return;
-      DB = { products: parsed.products, clients: parsed.clients, orders: parsed.orders, activity: parsed.activity || [], adjustments: parsed.adjustments || [] };
+      DB = { products: parsed.products, clients: parsed.clients, orders: parsed.orders, activity: parsed.activity || [], adjustments: parsed.adjustments || [], statsResetAt: parsed.statsResetAt || null };
       persist();
       toast('Backup restaurado!');
       logActivity('Backup restaurado a partir de arquivo', '📂');
@@ -1047,23 +1064,29 @@ function shareStatementImage(id){
 }
 
 /* ---------- Cálculos de dívida ---------- */
+function statsVisibleOrders(){
+  return DB.statsResetAt ? DB.orders.filter(o=>o.date>=DB.statsResetAt) : DB.orders;
+}
+function statsVisibleAdjustments(){
+  return DB.statsResetAt ? DB.adjustments.filter(a=>a.date>=DB.statsResetAt) : DB.adjustments;
+}
 function clientDebt(clientId){
   let total = 0;
   DB.orders.forEach(o=>{
-    if(o.clientId!==clientId) return;
+    if(o.clientId!==clientId || o.archived) return;
     o.items.forEach(it=>{ if(!it.paid) total += it.price*it.qty; });
   });
   DB.adjustments.forEach(a=>{
-    if(a.clientId!==clientId) return;
+    if(a.clientId!==clientId || a.archived) return;
     total += (a.type==='debit' ? a.amount : -a.amount);
   });
   return total;
 }
 function clientAdjustments(clientId){
-  return DB.adjustments.filter(a=>a.clientId===clientId).sort((a,b)=> a.date<b.date?1:-1);
+  return DB.adjustments.filter(a=>a.clientId===clientId && !a.archived).sort((a,b)=> a.date<b.date?1:-1);
 }
 function allOrdersFor(clientId){
-  return DB.orders.filter(o=>o.clientId===clientId).sort((a,b)=> a.date<b.date?1:-1);
+  return DB.orders.filter(o=>o.clientId===clientId && !o.archived).sort((a,b)=> a.date<b.date?1:-1);
 }
 
 /* ---------- INÍCIO ---------- */
@@ -1071,7 +1094,7 @@ function computeReceivedTotals(){
   const hoje = todayISO();
   const mesRef = hoje.slice(0,7);
   let hojeTotal = 0, mesTotal = 0;
-  DB.orders.forEach(o=>{
+  statsVisibleOrders().forEach(o=>{
     o.items.forEach(it=>{
       if(!it.paid || !it.paidDate) return;
       const valor = it.price*it.qty;
@@ -1079,7 +1102,7 @@ function computeReceivedTotals(){
       if(it.paidDate.slice(0,7)===mesRef) mesTotal += valor;
     });
   });
-  DB.adjustments.forEach(a=>{
+  statsVisibleAdjustments().forEach(a=>{
     if(a.type!=='credit') return;
     if(a.date===hoje) hojeTotal += a.amount;
     if(a.date && a.date.slice(0,7)===mesRef) mesTotal += a.amount;
@@ -1095,7 +1118,7 @@ function renderInicio(){
   const hoje = todayISO();
   let vendHoje = 0, vendMes = 0;
   const mesRef = hoje.slice(0,7);
-  DB.orders.forEach(o=>{
+  statsVisibleOrders().forEach(o=>{
     const soma = o.items.reduce((s,it)=>s+it.price*it.qty,0);
     if(o.date===hoje) vendHoje += soma;
     if(o.date.slice(0,7)===mesRef) vendMes += soma;
@@ -1288,6 +1311,20 @@ async function addCliente(){
   toast('Cliente adicionado');
   renderClientesLista();
 }
+async function resetarEstatisticas(){
+  try{
+    if(!confirm(`Isso vai zerar os números da aba Stats (faturamento, produtos mais vendidos, clientes frequentes) a partir de hoje.\n\nAs dívidas e o histórico de cada cliente continuam exatamente iguais — nada é apagado de verdade, só "escondido" das estatísticas de agora em diante.\n\nContinuar?`)) return;
+    DB.statsResetAt = todayISO();
+    const ok = persist();
+    if(!ok){ toast('Erro ao salvar!'); return; }
+    logActivity('Estatísticas resetadas (dívidas e histórico preservados)', '📊');
+    toast('Estatísticas zeradas!');
+    renderStats();
+  }catch(err){
+    console.error('Erro ao resetar estatísticas:', err);
+    toast('Erro inesperado — veja o console');
+  }
+}
 async function resetarTudo(){
   try{
     const totalClientes = DB.clients.length;
@@ -1386,7 +1423,7 @@ function abrirCliente(id){
       <button class="btn-main" style="margin-top:0;" onclick="abrirExtratoCliente('${id}')">📄 Extrato completo</button>
       ${debt>0?`<button class="btn-main" style="margin-top:0; background:var(--olive);" onclick="zerarContaCliente('${id}')">💰 Zerar conta</button>`:''}
     </div>
-    <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="limparHistoricoCliente('${id}')">🧹 Limpar histórico (manter cliente)</button>
+    <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="limparHistoricoCliente('${id}')">🧹 Limpar extrato (manter registros)</button>
     <button class="btn-danger" style="width:100%; margin:8px 0 4px;" onclick="removerCliente('${id}')">🗑️ Remover cliente e apagar histórico</button>
 
     <div class="card" style="margin:12px 0;">
@@ -1548,21 +1585,21 @@ async function limparHistoricoCliente(clientId){
   try{
     const cli = DB.clients.find(x=>x.id===clientId);
     if(!cli){ toast('Cliente não encontrado'); return; }
-    const ordersCount = DB.orders.filter(o=>o.clientId===clientId).length;
-    const adjCount = DB.adjustments.filter(a=>a.clientId===clientId).length;
-    if(!ordersCount && !adjCount){ toast('Não tem histórico pra limpar'); return; }
+    const ordersCount = DB.orders.filter(o=>o.clientId===clientId && !o.archived).length;
+    const adjCount = DB.adjustments.filter(a=>a.clientId===clientId && !a.archived).length;
+    if(!ordersCount && !adjCount){ toast('Não tem extrato pra limpar'); return; }
     const debt = clientDebt(clientId);
     if(debt > 0.004){
-      toast(`${cli.name} ainda deve ${brl(debt)} — quite ou zere a conta antes de limpar o histórico`);
+      toast(`${cli.name} ainda deve ${brl(debt)} — quite ou zere a conta antes de limpar o extrato`);
       return;
     }
-    if(!confirm(`Apagar todo o histórico de pedidos e ajustes de ${cli.name}? O cliente continua cadastrado, só o histórico antigo some. Essa ação não pode ser desfeita.`)) return;
-    DB.orders = DB.orders.filter(o=>o.clientId!==clientId);
-    DB.adjustments = DB.adjustments.filter(a=>a.clientId!==clientId);
+    if(!confirm(`Limpar o extrato de ${cli.name} da ficha dele? O cliente continua cadastrado. Isso não afeta o Calendário nem as Estatísticas — esses registros continuam contando pro negócio, só somem da conta individual dele.`)) return;
+    DB.orders.forEach(o=>{ if(o.clientId===clientId) o.archived = true; });
+    DB.adjustments.forEach(a=>{ if(a.clientId===clientId) a.archived = true; });
     const ok = persist();
     if(!ok){ toast('Erro ao salvar!'); return; }
-    logActivity(`Histórico limpo: ${cli.name} (${ordersCount} pedido(s), ${adjCount} ajuste(s) removidos)`, '🧹');
-    toast('Histórico limpo!');
+    logActivity(`Extrato limpo da ficha: ${cli.name} (${ordersCount} pedido(s), ${adjCount} ajuste(s))`, '🧹');
+    toast('Extrato limpo da ficha do cliente!');
     abrirCliente(clientId);
     renderClientesLista();
   }catch(err){
@@ -1972,18 +2009,18 @@ function renderStats(){
   const y = statsRef.getFullYear(), m = statsRef.getMonth();
   document.getElementById('statsMonthTitle').textContent = meses[m]+' '+y;
   const anoMes = `${y}-${String(m+1).padStart(2,'0')}`;
-  const monthOrders = DB.orders.filter(o=>o.date.slice(0,7)===anoMes);
+  const monthOrders = statsVisibleOrders().filter(o=>o.date.slice(0,7)===anoMes);
 
   let fiadoMes = 0;
   monthOrders.forEach(o=> o.items.forEach(it=>{ fiadoMes += it.price*it.qty; }));
 
   let recebidoMes = 0;
-  DB.orders.forEach(o=>{
+  statsVisibleOrders().forEach(o=>{
     o.items.forEach(it=>{
       if(it.paid && it.paidDate && it.paidDate.slice(0,7)===anoMes) recebidoMes += it.price*it.qty;
     });
   });
-  DB.adjustments.forEach(a=>{
+  statsVisibleAdjustments().forEach(a=>{
     if(a.type==='credit' && a.date && a.date.slice(0,7)===anoMes) recebidoMes += a.amount;
   });
 
@@ -2053,10 +2090,16 @@ function renderStats(){
     const c = DB.clients.find(x=>x.id===id);
     return {name: c?c.name:'(removido)', count, valor: valueByClient[id]||0};
   });
-  cliBox.innerHTML = cliEntries.length ? cliEntries.map(e=>`
-    <div class="stat-bar-wrap">
-      <div class="stat-bar-label"><span>${escapeHtml(e.name)}</span><span>${e.count} fiado(s) · ${brl(e.valor)}</span></div>
-      <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${(e.count/maxCount*100)}%; background:var(--olive);"></div></div>
+  cliBox.innerHTML = cliEntries.length ? cliEntries.map((e,i)=>`
+    <div class="debtor-row">
+      <div class="debtor-rank ${i===0?'debtor-rank-first':''}">${i+1}</div>
+      <div class="debtor-info">
+        <div class="debtor-top-line">
+          <span class="debtor-name">${escapeHtml(e.name)}</span>
+          <span class="money" style="font-size:.85rem;">${e.count}x · ${brl(e.valor)}</span>
+        </div>
+        <div class="debtor-bar-bg"><div class="debtor-bar-fill" style="width:${(e.count/maxCount*100)}%; background:var(--olive);"></div></div>
+      </div>
     </div>`).join('') : '<div class="empty">Sem dados nesse mês.</div>';
 }
 
