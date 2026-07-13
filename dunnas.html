@@ -181,6 +181,25 @@
   }
   .chip.on{background:var(--mustard); color:var(--ink); border-color:var(--mustard); font-weight:700;}
 
+  .product-cat-header{display:flex; align-items:center; gap:8px; margin:18px 0 8px;}
+  .product-cat-header .pch-icon{font-size:1.3rem; flex-shrink:0;}
+  .product-cat-header .pch-label{
+    font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--olive);
+    font-size:.85rem; border-bottom:2px solid var(--olive); padding-bottom:4px; flex:1; min-width:0;
+  }
+  .product-pick-row{
+    display:flex; align-items:center; gap:10px; min-width:0;
+    padding:11px 12px; margin-bottom:6px; border:1px solid var(--line); border-radius:8px;
+    background:var(--umber); cursor:pointer; transition:background .15s, border-color .15s;
+  }
+  .product-pick-row:active{background:#3f3626;}
+  .product-pick-row.on{background:var(--mustard); border-color:var(--mustard);}
+  .product-pick-row .ppr-check{flex-shrink:0; width:18px; text-align:center; font-weight:700; color:var(--ink);}
+  .product-pick-row .ppr-name{flex:1; min-width:0; color:var(--paper); font-weight:600; overflow-wrap:break-word;}
+  .product-pick-row.on .ppr-name{color:var(--ink);}
+  .product-pick-row .ppr-price{flex-shrink:0; font-weight:700; color:var(--mustard-light); white-space:nowrap;}
+  .product-pick-row.on .ppr-price{color:var(--ink);}
+
   .qty-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px dashed var(--umber);}
   .qty-controls{display:flex; align-items:center; gap:8px;}
   .qty-controls button{width:2em; height:2em; padding:0; background:var(--olive); color:var(--paper); font-size:1rem; flex-shrink:0;}
@@ -257,7 +276,7 @@
   .stats-summary-value{font-size:1.25rem; font-weight:700; color:var(--mustard-light);}
 
   .toast{
-    position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+    position:fixed; bottom:130px; left:50%; transform:translateX(-50%);
     background:var(--mustard); color:var(--ink); padding:9px 16px; border-radius:20px;
     font-size:.8rem; font-weight:700; z-index:60; opacity:0; pointer-events:none; transition:opacity .25s;
   }
@@ -644,6 +663,8 @@
       <h2>Notas de atualização</h2>
       <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mais recente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0 0 12px;">
+        <li>Seleção de produtos no Fiado redesenhada: cada categoria com ícone próprio, produtos em cartões com preço em destaque e marcação (✓) clara de selecionado</li>
+        <li>Corrigido: aviso "selecione um cliente" não fica mais colado na barra do carrinho</li>
         <li>Nova categoria "Bomboniere" (Chocolate, Pirulito Pop, Jujuba, Cocada, Pastilha Halls) — já disponível no cardápio, no cadastro de produto e nos produtos padrão</li>
         <li>Duas novas opções em Diversos: Porção de Guarnição e Porção de Proteína</li>
         <li>Aba Fiado não vem mais com o primeiro cliente da lista pré-selecionado — agora precisa escolher de propósito, evitando mandar fiado pra pessoa errada por esquecimento</li>
@@ -1667,6 +1688,10 @@ function renderPedidoForm(){
   renderProdutoChips('');
   renderQtyArea();
 }
+const CATEGORY_ICONS = {
+  'Sanduíches':'🥪', 'Cuscuz':'🌽', 'Tapiocas':'🫓', 'Diversos':'🍽️',
+  'Bomboniere':'🍬', 'Almoço':'🍱', 'Vitaminas':'🥤', 'Sucos':'🧃', 'Bebidas':'☕'
+};
 function renderProdutoChips(filter){
   const chipBox = document.getElementById('pedProdutos');
   if(!DB.products.length){
@@ -1686,19 +1711,26 @@ function renderProdutoChips(filter){
   }
   let html = '';
   orderedCats.forEach(cat=>{
-    html += `<div class="tag" style="margin:16px 0 8px; width:100%;">${escapeHtml(cat)}</div><div class="chip-select">`;
+    const icon = CATEGORY_ICONS[cat] || '🍴';
+    html += `<div class="product-cat-header"><span class="pch-icon">${icon}</span><span class="pch-label">${escapeHtml(cat)}</span></div>`;
     byCat[cat].sort((a,b)=>a.price-b.price).forEach(p=>{
       const on = pedQtyMap[p.id] ? ' on' : '';
-      html += `<div class="chip${on}" id="chip-${p.id}" onclick="toggleChip('${p.id}')">${escapeHtml(p.name)} · ${brl(p.price)}</div>`;
+      html += `<div class="product-pick-row${on}" id="chip-${p.id}" onclick="toggleChip('${p.id}')">
+        <span class="ppr-check">${pedQtyMap[p.id]?'✓':''}</span>
+        <span class="ppr-name">${escapeHtml(p.name)}</span>
+        <span class="ppr-price">${brl(p.price)}</span>
+      </div>`;
     });
-    html += '</div>';
   });
   chipBox.innerHTML = html;
 }
 function toggleChip(pid){
   if(pedQtyMap[pid]){ delete pedQtyMap[pid]; }
   else { pedQtyMap[pid] = 1; }
-  document.getElementById('chip-'+pid).classList.toggle('on');
+  const row = document.getElementById('chip-'+pid);
+  row.classList.toggle('on');
+  const checkEl = row.querySelector('.ppr-check');
+  if(checkEl) checkEl.textContent = pedQtyMap[pid] ? '✓' : '';
   renderQtyArea();
   pulseCart();
 }
