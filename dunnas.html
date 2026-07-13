@@ -47,7 +47,7 @@
   }
   header .brand-row{display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px 10px;}
   header .brand-row > div:first-child{min-width:0; flex-basis:100%;}
-  header h1{font-size:1.5rem; color:var(--mustard-light); font-weight:700; overflow-wrap:break-word;}
+  header h1{font-size:clamp(20px, 1.5rem, 30px); color:var(--mustard-light); font-weight:700; overflow-wrap:break-word;}
   header .sub{font-size:.7rem; color:var(--paper-dim); text-transform:uppercase; letter-spacing:.15em;}
   header .stamp{
     border:1.5px solid var(--rust); color:var(--rust); font-size:.62rem;
@@ -175,26 +175,27 @@
   .client-card .cdebt{font-size:1.05rem;}
 
   .chip-select{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
+  #pedProdutos{display:flex; flex-direction:column; gap:0;}
   .chip{
     border:1px solid var(--line); border-radius:20px; padding:.5em 1em; font-size:.8rem;
     background:var(--umber); color:var(--paper-dim); cursor:pointer;
   }
   .chip.on{background:var(--mustard); color:var(--ink); border-color:var(--mustard); font-weight:700;}
 
-  .product-cat-header{display:flex; align-items:center; gap:8px; margin:18px 0 8px;}
+  .product-cat-header{display:flex; align-items:center; gap:8px; margin:18px 0 8px; width:100%; flex-basis:100%;}
   .product-cat-header .pch-icon{font-size:1.3rem; flex-shrink:0;}
   .product-cat-header .pch-label{
     font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--olive);
     font-size:.85rem; border-bottom:2px solid var(--olive); padding-bottom:4px; flex:1; min-width:0;
   }
   .product-pick-row{
-    display:flex; align-items:center; gap:10px; min-width:0;
+    display:flex; align-items:flex-start; gap:10px; min-width:0; width:100%; flex-basis:100%;
     padding:11px 12px; margin-bottom:6px; border:1px solid var(--line); border-radius:8px;
     background:var(--umber); cursor:pointer; transition:background .15s, border-color .15s;
   }
   .product-pick-row:active{background:#3f3626;}
   .product-pick-row.on{background:var(--mustard); border-color:var(--mustard);}
-  .product-pick-row .ppr-check{flex-shrink:0; width:18px; text-align:center; font-weight:700; color:var(--ink);}
+  .product-pick-row .ppr-check{flex-shrink:0; width:18px; text-align:center; font-weight:700; color:var(--ink); margin-top:.15em;}
   .product-pick-row .ppr-name{flex:1; min-width:0; color:var(--paper); font-weight:600; overflow-wrap:break-word;}
   .product-pick-row.on .ppr-name{color:var(--ink);}
   .product-pick-row .ppr-price{flex-shrink:0; font-weight:700; color:var(--mustard-light); white-space:nowrap;}
@@ -663,6 +664,9 @@
       <h2>Notas de atualização</h2>
       <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mais recente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0 0 12px;">
+        <li>Corrigido: cabeçalho de categoria (tipo "BOMBONIERE") não fica mais colado do lado do último produto da categoria anterior — sempre em linha própria agora</li>
+        <li>Cartões de produto no fiado alinhados ao topo, ficando mais organizados quando o nome quebra em 2 linhas</li>
+        <li>Corrigido de vez: título "Dunnas Gerenciamento" tem um limite máximo de tamanho, garantindo que nunca mais quebre palavra no meio em nenhum tamanho de fonte</li>
         <li>Seleção de produtos no Fiado redesenhada: cada categoria com ícone próprio, produtos em cartões com preço em destaque e marcação (✓) clara de selecionado</li>
         <li>Corrigido: aviso "selecione um cliente" não fica mais colado na barra do carrinho</li>
         <li>Nova categoria "Bomboniere" (Chocolate, Pirulito Pop, Jujuba, Cocada, Pastilha Halls) — já disponível no cardápio, no cadastro de produto e nos produtos padrão</li>
