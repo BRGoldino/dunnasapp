@@ -189,16 +189,17 @@
     font-size:.85rem; border-bottom:2px solid var(--olive); padding-bottom:4px; flex:1; min-width:0;
   }
   .product-pick-row{
-    display:flex; align-items:flex-start; gap:10px; min-width:0; width:100%; flex-basis:100%;
+    display:flex; align-items:flex-start; gap:10px; min-width:0; width:100%;
     padding:11px 12px; margin-bottom:6px; border:1px solid var(--line); border-radius:8px;
     background:var(--umber); cursor:pointer; transition:background .15s, border-color .15s;
   }
   .product-pick-row:active{background:#3f3626;}
   .product-pick-row.on{background:var(--mustard); border-color:var(--mustard);}
   .product-pick-row .ppr-check{flex-shrink:0; width:18px; text-align:center; font-weight:700; color:var(--ink); margin-top:.15em;}
-  .product-pick-row .ppr-name{flex:1; min-width:0; color:var(--paper); font-weight:600; overflow-wrap:break-word;}
+  .product-pick-row .ppr-content{flex:1; min-width:0;}
+  .product-pick-row .ppr-name{color:var(--paper); font-weight:600; overflow-wrap:break-word;}
   .product-pick-row.on .ppr-name{color:var(--ink);}
-  .product-pick-row .ppr-price{flex-shrink:0; font-weight:700; color:var(--mustard-light); white-space:nowrap;}
+  .product-pick-row .ppr-price{font-weight:700; color:var(--mustard-light); margin-top:2px;}
   .product-pick-row.on .ppr-price{color:var(--ink);}
 
   .qty-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px dashed var(--umber);}
@@ -664,6 +665,9 @@
       <h2>Notas de atualização</h2>
       <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mais recente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0 0 12px;">
+        <li>Corrigido de vez: preço agora fica sempre embaixo do nome do produto (nunca mais dividindo linha com ele), garantindo espaço máximo pra nomes longos tipo "Refrigerante" não quebrarem no meio</li>
+        <li>Corrigido: quando o nome do produto é longo em fontes grandes, o preço agora desce pra linha de baixo em vez de quebrar a palavra no meio</li>
+        <li>Busca por "pratinho" na aba Fiado já encontra o Almoço Pequeno (apelido interno, nunca aparece na tela)</li>
         <li>Corrigido: cabeçalho de categoria (tipo "BOMBONIERE") não fica mais colado do lado do último produto da categoria anterior — sempre em linha própria agora</li>
         <li>Cartões de produto no fiado alinhados ao topo, ficando mais organizados quando o nome quebra em 2 linhas</li>
         <li>Corrigido de vez: título "Dunnas Gerenciamento" tem um limite máximo de tamanho, garantindo que nunca mais quebre palavra no meio em nenhum tamanho de fonte</li>
@@ -1198,7 +1202,7 @@ function onCatSelectChange(){
   document.getElementById('novoProdCatCustom').style.display = sel.value==='__custom__' ? 'block' : 'none';
 }
 
-const DEFAULT_PRODUCTS = [{"name": "Cuscuz com Manteiga", "price": 4.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo", "price": 5.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Presunto e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Cuscuz"}, {"name": "Tapioca Simples", "price": 3.0, "cat": "Tapiocas"}, {"name": "Tapioca com Presunto e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo", "price": 5.0, "cat": "Tapiocas"}, {"name": "Tapioca com Queijo", "price": 6.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Fatia de Bolo", "price": 4.0, "cat": "Diversos"}, {"name": "Hot Dog", "price": 7.0, "cat": "Diversos"}, {"name": "Salgados", "price": 5.0, "cat": "Diversos"}, {"name": "Porção de Guarnição", "price": 2.0, "cat": "Diversos"}, {"name": "Porção de Proteína", "price": 5.0, "cat": "Diversos"}, {"name": "Almoço Pequeno (1 guarnição)", "price": 13.0, "cat": "Almoço"}, {"name": "Almoço Grande (2 guarnições)", "price": 18.0, "cat": "Almoço"}, {"name": "Hambúrguer (pão, carne, alface e tomate)", "price": 10.0, "cat": "Sanduíches"}, {"name": "X-Burguer (pão, carne, queijo, alface e tomate)", "price": 11.0, "cat": "Sanduíches"}, {"name": "Bauru (pão, carne, queijo, ovo, alface e tomate)", "price": 12.0, "cat": "Sanduíches"}, {"name": "X-Tudo (pão, carne, queijo, presunto, ovo, alface e tomate)", "price": 15.0, "cat": "Sanduíches"}, {"name": "X-Egg (pão, ovo e queijo)", "price": 7.0, "cat": "Sanduíches"}, {"name": "Misto (pão, queijo e presunto)", "price": 8.0, "cat": "Sanduíches"}, {"name": "Pão com Ovo (pão e ovo)", "price": 5.0, "cat": "Sanduíches"}, {"name": "Pão na Chapa (pão com manteiga)", "price": 3.0, "cat": "Sanduíches"}, {"name": "Queijo Quente (pão e queijo)", "price": 6.0, "cat": "Sanduíches"}, {"name": "Chocolate", "price": 2.0, "cat": "Bomboniere"}, {"name": "Pirulito Pop", "price": 2.0, "cat": "Bomboniere"}, {"name": "Jujuba", "price": 2.0, "cat": "Bomboniere"}, {"name": "Cocada", "price": 2.5, "cat": "Bomboniere"}, {"name": "Pastilha Halls", "price": 3.0, "cat": "Bomboniere"}, {"name": "Café Pequeno", "price": 2.0, "cat": "Bebidas"}, {"name": "Café Grande", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Pequeno", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Grande", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante 250ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante Lata", "price": 5.5, "cat": "Bebidas"}, {"name": "Refrigerante 600ml", "price": 6.0, "cat": "Bebidas"}, {"name": "Refrigerante 1L", "price": 8.0, "cat": "Bebidas"}, {"name": "Refrigerante 2L", "price": 13.0, "cat": "Bebidas"}, {"name": "Nescau", "price": 3.5, "cat": "Bebidas"}, {"name": "Tampico 300ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Água 500ml", "price": 2.5, "cat": "Bebidas"}, {"name": "Água com Gás", "price": 3.5, "cat": "Bebidas"}, {"name": "Vitamina de Manga", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Acerola", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Goiaba", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Cajá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Maracujá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Ameixa", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Morango", "price": 8.0, "cat": "Vitaminas"}, {"name": "Vitamina com Pó de Guaraná", "price": 8.0, "cat": "Vitaminas"}, {"name": "Açaí com Banana", "price": 10.0, "cat": "Vitaminas"}, {"name": "Copo de Suco 150ml", "price": 2.0, "cat": "Sucos"}, {"name": "Copo de Suco 300ml", "price": 3.0, "cat": "Sucos"}];
+const DEFAULT_PRODUCTS = [{"name": "Cuscuz com Manteiga", "price": 4.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo", "price": 5.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Presunto e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Cuscuz"}, {"name": "Tapioca Simples", "price": 3.0, "cat": "Tapiocas"}, {"name": "Tapioca com Presunto e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo", "price": 5.0, "cat": "Tapiocas"}, {"name": "Tapioca com Queijo", "price": 6.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Fatia de Bolo", "price": 4.0, "cat": "Diversos"}, {"name": "Hot Dog", "price": 7.0, "cat": "Diversos"}, {"name": "Salgados", "price": 5.0, "cat": "Diversos"}, {"name": "Porção de Guarnição", "price": 2.0, "cat": "Diversos"}, {"name": "Porção de Proteína", "price": 4.0, "cat": "Diversos"}, {"name": "Almoço Pequeno (1 guarnição)", "price": 13.0, "cat": "Almoço", "alias": "pratinho"}, {"name": "Almoço Grande (2 guarnições)", "price": 18.0, "cat": "Almoço"}, {"name": "Hambúrguer (pão, carne, alface e tomate)", "price": 10.0, "cat": "Sanduíches"}, {"name": "X-Burguer (pão, carne, queijo, alface e tomate)", "price": 11.0, "cat": "Sanduíches"}, {"name": "Bauru (pão, carne, queijo, ovo, alface e tomate)", "price": 12.0, "cat": "Sanduíches"}, {"name": "X-Tudo (pão, carne, queijo, presunto, ovo, alface e tomate)", "price": 15.0, "cat": "Sanduíches"}, {"name": "X-Egg (pão, ovo e queijo)", "price": 7.0, "cat": "Sanduíches"}, {"name": "Misto (pão, queijo e presunto)", "price": 8.0, "cat": "Sanduíches"}, {"name": "Pão com Ovo (pão e ovo)", "price": 5.0, "cat": "Sanduíches"}, {"name": "Pão na Chapa (pão com manteiga)", "price": 3.0, "cat": "Sanduíches"}, {"name": "Queijo Quente (pão e queijo)", "price": 6.0, "cat": "Sanduíches"}, {"name": "Chocolate", "price": 2.0, "cat": "Bomboniere"}, {"name": "Pirulito Pop", "price": 2.0, "cat": "Bomboniere"}, {"name": "Jujuba", "price": 2.0, "cat": "Bomboniere"}, {"name": "Cocada", "price": 2.5, "cat": "Bomboniere"}, {"name": "Pastilha Halls", "price": 3.0, "cat": "Bomboniere"}, {"name": "Café Pequeno", "price": 2.0, "cat": "Bebidas"}, {"name": "Café Grande", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Pequeno", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Grande", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante 250ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante Lata", "price": 5.5, "cat": "Bebidas"}, {"name": "Refrigerante 600ml", "price": 6.0, "cat": "Bebidas"}, {"name": "Refrigerante 1L", "price": 8.0, "cat": "Bebidas"}, {"name": "Refrigerante 2L", "price": 13.0, "cat": "Bebidas"}, {"name": "Nescau", "price": 3.5, "cat": "Bebidas"}, {"name": "Tampico 300ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Água 500ml", "price": 2.5, "cat": "Bebidas"}, {"name": "Água com Gás", "price": 3.5, "cat": "Bebidas"}, {"name": "Vitamina de Manga", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Acerola", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Goiaba", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Cajá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Maracujá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Ameixa", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Morango", "price": 8.0, "cat": "Vitaminas"}, {"name": "Vitamina com Pó de Guaraná", "price": 8.0, "cat": "Vitaminas"}, {"name": "Açaí com Banana", "price": 10.0, "cat": "Vitaminas"}, {"name": "Copo de Suco 150ml", "price": 2.0, "cat": "Sucos"}, {"name": "Copo de Suco 300ml", "price": 3.0, "cat": "Sucos"}];
 function loadDefaultProducts(){
   if(!confirm(`Isso vai adicionar os ${DEFAULT_PRODUCTS.length} produtos padrão do cardápio da Dunnas (cuscuz, tapiocas, sanduíches, bebidas, vitaminas, sucos e almoço).\n\nSe algum produto já existir com o mesmo nome, o preço dele será atualizado pro valor padrão. Produtos que você já tem com outros nomes não são afetados. Clientes e fiados não são alterados.\n\nContinuar?`)) return;
   const { added, updated } = upsertProductsList(DEFAULT_PRODUCTS);
@@ -1234,14 +1238,15 @@ function upsertProductsList(list){
     const key = item.name.trim().toLowerCase();
     const existing = byName.get(key);
     if(existing){
-      if(existing.price !== item.price || (item.cat && existing.cat !== item.cat)){
+      if(existing.price !== item.price || (item.cat && existing.cat !== item.cat) || (item.alias && existing.alias !== item.alias)){
         existing.price = item.price;
         if(item.cat) existing.cat = item.cat;
         if(item.desc !== undefined) existing.desc = item.desc;
+        if(item.alias !== undefined) existing.alias = item.alias;
         updated++;
       }
     } else {
-      const novo = { id:uid(), name:item.name.trim(), price:item.price, cat:item.cat||'Outros', desc:item.desc||'' };
+      const novo = { id:uid(), name:item.name.trim(), price:item.price, cat:item.cat||'Outros', desc:item.desc||'', alias:item.alias||'' };
       DB.products.push(novo);
       byName.set(key, novo);
       added++;
@@ -1703,7 +1708,7 @@ function renderProdutoChips(filter){
     return;
   }
   const term = (filter||'').toLowerCase();
-  const filtered = DB.products.filter(p=>p.name.toLowerCase().includes(term));
+  const filtered = DB.products.filter(p=>p.name.toLowerCase().includes(term) || (p.alias && p.alias.toLowerCase().includes(term)));
   const byCat = {};
   filtered.forEach(p=>{ (byCat[p.cat||'Outros'] = byCat[p.cat||'Outros']||[]).push(p); });
   const catsPresent = Object.keys(byCat);
@@ -1721,8 +1726,10 @@ function renderProdutoChips(filter){
       const on = pedQtyMap[p.id] ? ' on' : '';
       html += `<div class="product-pick-row${on}" id="chip-${p.id}" onclick="toggleChip('${p.id}')">
         <span class="ppr-check">${pedQtyMap[p.id]?'✓':''}</span>
-        <span class="ppr-name">${escapeHtml(p.name)}</span>
-        <span class="ppr-price">${brl(p.price)}</span>
+        <div class="ppr-content">
+          <div class="ppr-name">${escapeHtml(p.name)}</div>
+          <div class="ppr-price">${brl(p.price)}</div>
+        </div>
       </div>`;
     });
   });
