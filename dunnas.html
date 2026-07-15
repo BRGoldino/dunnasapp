@@ -293,11 +293,14 @@
   .fullscreen-view-topbar{ position:sticky; top:0; display:flex; justify-content:flex-end; padding-bottom:10px; background:var(--umber); z-index:1; }
   .fullscreen-view-content{ max-width:720px; margin:0 auto; }
 
-  #printArea{ display:none; }
-  @media print{
-    body > *:not(#printArea){ display:none !important; }
-    #printArea{ display:block !important; }
+  .export-preview-overlay{
+    position:fixed; inset:0; background:rgba(10,8,4,.94); z-index:95;
+    overflow-y:auto; padding:14px;
   }
+  .export-preview-content{max-width:720px; margin:0 auto;}
+  .export-preview-page{margin-bottom:14px;}
+  .export-preview-page img{width:100%; border-radius:6px; border:1px solid var(--line); display:block; background:#fff;}
+  .export-preview-page-label{font-size:.72rem; color:var(--paper-dim); margin-bottom:4px;}
 
   .fiado-confirm-overlay{
     position:fixed; inset:0; background:rgba(10,8,4,.82); z-index:70;
@@ -523,7 +526,7 @@
         <button class="btn-ghost" onclick="fullscreenCardapio()">⛶ Tela cheia</button>
         <button class="btn-ghost" onclick="downloadCardapioImage()">⬇ Baixar imagem</button>
       </div>
-      <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="printCardapio()">🖨️ Imprimir</button>
+      <button class="btn-main" style="width:100%; margin-top:8px;" onclick="shareCardapioImage()">📤 Compartilhar</button>
     </div>
     <div id="cardapioArea"></div>
   </section>
@@ -665,6 +668,14 @@
       <h2>Notas de atualização</h2>
       <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mais recente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0 0 12px;">
+        <li>Configurações do extrato ganharam controle manual da divisão de imagens (automática, manual com nº de linhas por imagem, ou forçar imagem única) — útil pra corrigir na mão se a divisão automática sair errada</li>
+        <li>Baixar ou compartilhar o cardápio e o extrato agora mostra uma pré-visualização de todas as imagens antes de confirmar</li>
+        <li>Exceção manual de ordem: "Porção de Proteína" sempre aparece logo depois de "Porção de Guarnição", mesmo fugindo da lógica de preço/ordem alfabética</li>
+        <li>Produtos com preço exatamente igual dentro da mesma categoria agora aparecem em ordem alfabética (no cardápio e na seleção de produtos do Fiado)</li>
+        <li>Novo produto padrão: "Biscoito Recheado G" (R$ 3,50) na categoria Bomboniere</li>
+        <li>Novo produto padrão: "Paçoquita" (R$ 1,50) na categoria Bomboniere</li>
+        <li>Aba Cardápio: botão "Imprimir" removido, substituído por "Compartilhar" (envia a imagem direto pra outros apps/redes sociais, igual já funcionava no Extrato)</li>
+        <li>Imagens do Cardápio e do Extrato agora são divididas automaticamente em várias partes quando ficam muito grandes, evitando texto pixelado/ilegível ao baixar ou compartilhar</li>
         <li>Corrigido de vez: preço agora fica sempre embaixo do nome do produto (nunca mais dividindo linha com ele), garantindo espaço máximo pra nomes longos tipo "Refrigerante" não quebrarem no meio</li>
         <li>Corrigido: quando o nome do produto é longo em fontes grandes, o preço agora desce pra linha de baixo em vez de quebrar a palavra no meio</li>
         <li>Busca por "pratinho" na aba Fiado já encontra o Almoço Pequeno (apelido interno, nunca aparece na tela)</li>
@@ -788,8 +799,6 @@
 </div>
 
 <div class="toast" id="toast"></div>
-
-<div id="printArea"></div>
 
 <script>
 /* ---------- Estado & persistência ---------- */
@@ -991,7 +1000,7 @@ function buildClientStatementHtml(id){
   return html;
 }
 const STMT_PREFS_KEY = 'dunnas_stmt_prefs';
-const STMT_DEFAULTS = { scale:1.5, bg:'#f2e9d8', text:'#161310', price:'#8a3410', nameColor:'#a54a2a', nameScale:1.5 };
+const STMT_DEFAULTS = { scale:1.5, bg:'#f2e9d8', text:'#161310', price:'#8a3410', nameColor:'#a54a2a', nameScale:1.5, pageMode:'auto', manualLines:20 };
 function getStmtPrefs(){
   try{ return Object.assign({}, STMT_DEFAULTS, JSON.parse(localStorage.getItem(STMT_PREFS_KEY)||'{}')); }
   catch(e){ return Object.assign({}, STMT_DEFAULTS); }
@@ -1012,6 +1021,15 @@ function setStmtNameScale(id, scale){
 }
 function setStmtColor(id, key, value){
   const p = getStmtPrefs(); p[key] = value; saveStmtPrefs(p);
+  refreshExtratoView(id);
+}
+function setStmtPageMode(id, mode){
+  const p = getStmtPrefs(); p.pageMode = mode; saveStmtPrefs(p);
+  toast(mode==='auto' ? 'Divisão de imagens: automática' : mode==='manual' ? 'Divisão de imagens: manual' : 'Forçando imagem única (pode ficar difícil de ler se o extrato for grande)');
+  refreshExtratoView(id);
+}
+function setStmtManualLines(id, lines){
+  const p = getStmtPrefs(); p.manualLines = lines; saveStmtPrefs(p);
   refreshExtratoView(id);
 }
 function resetStmtPrefs(id){
@@ -1046,6 +1064,19 @@ function buildStmtSettingsPanel(id){
     <div class="chip-select">
       ${nameScaleChip(1.2,'Normal')}${nameScaleChip(1.5,'Grande')}${nameScaleChip(1.8,'Muito grande')}${nameScaleChip(2.2,'Máximo')}
     </div>
+    <h3 style="color:var(--mustard-light); font-size:.9rem; margin:16px 0 4px; border-top:1px dashed var(--line); padding-top:12px;">🖼️ Exportação de imagem</h3>
+    <p style="font-size:.72rem; color:var(--paper-dim); margin:0 0 8px;">Extratos grandes são divididos automaticamente em várias imagens pra não ficar pixelado. Se algo sair errado (parte cortada estranho, imagem vazia etc), ajuste manualmente aqui e gere de novo.</p>
+    <label>Divisão das imagens</label>
+    <div class="chip-select">
+      <div class="chip ${(p.pageMode||'auto')==='auto'?'on':''}" onclick="setStmtPageMode('${id}','auto')">Automática</div>
+      <div class="chip ${p.pageMode==='manual'?'on':''}" onclick="setStmtPageMode('${id}','manual')">Manual</div>
+      <div class="chip ${p.pageMode==='unica'?'on':''}" onclick="setStmtPageMode('${id}','unica')">Forçar imagem única</div>
+    </div>
+    ${p.pageMode==='manual' ? `
+    <label>Linhas por imagem (menor = mais imagens, cada uma mais legível)</label>
+    <div class="chip-select">
+      ${[10,15,20,30,45].map(n=>`<div class="chip ${p.manualLines===n?'on':''}" onclick="setStmtManualLines('${id}',${n})">${n}</div>`).join('')}
+    </div>` : ''}
     <button class="btn-ghost" style="width:100%; margin-top:10px;" onclick="resetStmtPrefs('${id}')">Restaurar padrão</button>
   </div>`;
 }
@@ -1063,38 +1094,122 @@ function abrirExtratoCliente(id, manterEstadoPainel){
     ${html}
   `);
 }
-function downloadStatementImage(id){
-  const el = document.getElementById('clientStatementSheet');
-  if(!el || typeof html2canvas === 'undefined'){ toast('Sem conexão pra gerar imagem agora.'); return; }
-  toast('Gerando imagem...');
-  html2canvas(el, {backgroundColor:'#f2e9d8', scale:2}).then(canvas=>{
-    canvas.toBlob(blob=>{
-      const c = DB.clients.find(x=>x.id===id);
-      downloadBlobFile(blob, `extrato-${(c?c.name:'cliente').replace(/\s+/g,'-')}-${todayISO()}.png`);
-      toast('Imagem baixada!');
+function statementEntryHtml(e, prefs){
+  if(e.type==='order'){
+    const o = e.data;
+    const soma = o.items.reduce((s,it)=>s+it.price*it.qty,0);
+    let html = `<div class="statement-day">
+      <div class="statement-day-header"><span>${fmtDate(o.date)}</span><span class="statement-day-total" style="color:${prefs.price};">${brl(soma)}</span></div>`;
+    o.items.forEach(it=>{
+      html += `<div class="statement-item" style="opacity:${it.paid?0.5:1};">
+        <span class="statement-item-name" style="color:${prefs.text};">${it.qty}x ${escapeHtml(it.name)}${it.paid?' <em>(pago)</em>':''}</span>
+        <span class="statement-item-price" style="color:${prefs.price};">${brl(it.price*it.qty)}</span>
+      </div>`;
     });
-  }).catch(err=>{ console.error(err); toast('Erro ao gerar imagem'); });
+    return html + '</div>';
+  }
+  const a = e.data;
+  return `<div class="statement-day" style="background:#f0e6d8;">
+    <div class="statement-day-header" style="font-size:.85rem;">
+      <span style="color:${prefs.text};">${fmtDate(a.date)} — ${a.type==='debit'?'Valor adicionado':'Pagamento recebido'}${a.note?': '+escapeHtml(a.note):''}</span>
+      <span class="statement-day-total" style="color:${a.type==='debit'?'#a54a2a':'#5c6b3f'};">${a.type==='debit'?'+':'−'}${brl(a.amount)}</span>
+    </div>
+  </div>`;
 }
-function shareStatementImage(id){
-  const el = document.getElementById('clientStatementSheet');
-  if(!el || typeof html2canvas === 'undefined'){ toast('Sem conexão pra gerar imagem agora.'); return; }
-  toast('Gerando imagem...');
-  html2canvas(el, {backgroundColor:'#f2e9d8', scale:2}).then(canvas=>{
-    canvas.toBlob(async (blob)=>{
-      const c = DB.clients.find(x=>x.id===id);
-      const filename = `extrato-${(c?c.name:'cliente').replace(/\s+/g,'-')}.png`;
-      try{
-        const file = new File([blob], filename, {type:'image/png'});
-        if(navigator.canShare && navigator.canShare({files:[file]})){
-          await navigator.share({files:[file], title:'Extrato de fiado', text:`Extrato de ${c?c.name:'cliente'} — Dunnas`});
-          return;
-        }
-      }catch(err){ /* usuário cancelou o compartilhamento, sem problema */ return; }
-      downloadBlobFile(blob, filename);
-      toast('Compartilhamento direto não disponível nesse navegador — imagem baixada pra enviar manualmente.');
+function buildStatementPages(id){
+  const c = DB.clients.find(x=>x.id===id);
+  if(!c) return null;
+  const debt = clientDebt(id);
+  const orders = allOrdersFor(id);
+  const adjustments = clientAdjustments(id);
+  const prefs = getStmtPrefs();
+  let entries = [];
+  orders.forEach(o=>entries.push({date:o.date, type:'order', data:o}));
+  adjustments.forEach(a=>entries.push({date:a.date, type:'adj', data:a}));
+  entries.sort((a,b)=> a.date<b.date?1:-1);
+
+  let LINES_PER_PAGE;
+  if(prefs.pageMode==='unica'){
+    LINES_PER_PAGE = 100000;
+  } else if(prefs.pageMode==='manual'){
+    LINES_PER_PAGE = Math.max(4, prefs.manualLines||20);
+  } else {
+    LINES_PER_PAGE = Math.max(10, Math.round(30/prefs.scale));
+  }
+  const pages = [];
+  let current = [];
+  let currentLines = 0;
+  entries.forEach(e=>{
+    const lines = e.type==='order' ? 1+e.data.items.length : 1;
+    if(currentLines+lines > LINES_PER_PAGE && current.length){
+      pages.push(current); current=[]; currentLines=0;
+    }
+    current.push(e); currentLines += lines;
+  });
+  if(current.length || !entries.length) pages.push(current);
+  return {c, debt, prefs, pages};
+}
+function renderStatementPageHtml(entries, c, debt, prefs, pageIndex, totalPages){
+  let header;
+  if(pageIndex===1){
+    header = `<h2 style="color:${prefs.nameColor}; font-size:${prefs.nameScale}em;">${escapeHtml(c.name)}</h2>
+      <div style="text-align:center; font-size:.72em; color:#888; margin-bottom:12px;">Extrato gerado em ${fmtDate(todayISO())} · Dunnas Alimentação Corporativa${totalPages>1?` · parte 1/${totalPages}`:''}</div>
+      <div style="text-align:center; margin:10px 0 18px;">
+        <div style="font-size:.68em; text-transform:uppercase; letter-spacing:.1em; color:#888;">Total em aberto</div>
+        <div style="font-size:1.9em; font-weight:700; color:${debt>0?'#a54a2a':'#5c6b3f'};">${brl(debt)}</div>
+      </div>
+      <div class="menu-cat" style="color:#5c6b3f; font-size:1em;">Histórico detalhado</div>`;
+  } else {
+    header = `<h2 style="color:${prefs.nameColor}; font-size:${Math.max(1,prefs.nameScale*0.7)}em;">${escapeHtml(c.name)} <span style="font-size:.5em; color:#888;">(parte ${pageIndex}/${totalPages})</span></h2>`;
+  }
+  const body = entries.length
+    ? entries.map(e=>statementEntryHtml(e, prefs)).join('')
+    : '<div style="text-align:center; color:#999; font-style:italic; padding:16px 4px;">Nenhum registro ainda.</div>';
+  return `<div class="menu-sheet" style="background:${prefs.bg}; font-size:${Math.round(16*prefs.scale)}px; --stmt-text:${prefs.text}; --stmt-price:${prefs.price};">${header}${body}</div>`;
+}
+async function generateStatementImageBlobs(id){
+  const built = buildStatementPages(id);
+  if(!built) return null;
+  const {c, debt, prefs, pages} = built;
+  const htmlPages = pages.map((entries,i)=>renderStatementPageHtml(entries, c, debt, prefs, i+1, pages.length));
+  const blobs = await captureSheetPages(htmlPages, 700);
+  return {blobs, clientName: c.name};
+}
+function performStatementDownload(blobs, clientName){
+  const safeName = clientName.replace(/\s+/g,'-');
+  blobs.forEach((blob,i)=>{
+    const suffix = blobs.length>1 ? `-parte${i+1}de${blobs.length}` : '';
+    downloadBlobFile(blob, `extrato-${safeName}${suffix}-${todayISO()}.png`);
+  });
+  toast(blobs.length>1 ? `Extrato baixado em ${blobs.length} imagens (pra ficar legível)!` : 'Imagem baixada!');
+}
+async function performStatementShare(blobs, clientName){
+  const safeName = clientName.replace(/\s+/g,'-');
+  const files = blobs.map((blob,i)=>new File([blob], `extrato-${safeName}${blobs.length>1?'-parte'+(i+1):''}.png`, {type:'image/png'}));
+  try{
+    if(navigator.canShare && navigator.canShare({files})){
+      await navigator.share({files, title:'Extrato de fiado', text:`Extrato de ${clientName} — Dunnas`});
+      return;
+    }
+  }catch(err){ /* usuário cancelou o compartilhamento, sem problema */ return; }
+  blobs.forEach((blob,i)=>downloadBlobFile(blob, files[i].name));
+  toast('Compartilhamento direto não disponível nesse navegador — imagem(ns) baixada(s) pra enviar manualmente.');
+}
+async function openStatementExportPreview(id){
+  if(typeof html2canvas === 'undefined'){ toast('Sem conexão pra gerar imagem agora.'); return; }
+  toast('Gerando pré-visualização...');
+  try{
+    const result = await generateStatementImageBlobs(id);
+    if(!result){ toast('Cliente não encontrado'); return; }
+    showExportPreview(result.blobs, {
+      title: 'Pré-visualização do extrato',
+      onDownload: (blobs)=>performStatementDownload(blobs, result.clientName),
+      onShare: (blobs)=>performStatementShare(blobs, result.clientName)
     });
-  }).catch(err=>{ console.error(err); toast('Erro ao gerar imagem'); });
+  }catch(err){ console.error(err); toast('Erro ao gerar imagem'); }
 }
+function downloadStatementImage(id){ return openStatementExportPreview(id); }
+function shareStatementImage(id){ return openStatementExportPreview(id); }
 
 /* ---------- Cálculos de dívida ---------- */
 function statsVisibleOrders(){
@@ -1202,7 +1317,7 @@ function onCatSelectChange(){
   document.getElementById('novoProdCatCustom').style.display = sel.value==='__custom__' ? 'block' : 'none';
 }
 
-const DEFAULT_PRODUCTS = [{"name": "Cuscuz com Manteiga", "price": 4.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo", "price": 5.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Presunto e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Cuscuz"}, {"name": "Tapioca Simples", "price": 3.0, "cat": "Tapiocas"}, {"name": "Tapioca com Presunto e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo", "price": 5.0, "cat": "Tapiocas"}, {"name": "Tapioca com Queijo", "price": 6.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Fatia de Bolo", "price": 4.0, "cat": "Diversos"}, {"name": "Hot Dog", "price": 7.0, "cat": "Diversos"}, {"name": "Salgados", "price": 5.0, "cat": "Diversos"}, {"name": "Porção de Guarnição", "price": 2.0, "cat": "Diversos"}, {"name": "Porção de Proteína", "price": 4.0, "cat": "Diversos"}, {"name": "Almoço Pequeno (1 guarnição)", "price": 13.0, "cat": "Almoço", "alias": "pratinho"}, {"name": "Almoço Grande (2 guarnições)", "price": 18.0, "cat": "Almoço"}, {"name": "Hambúrguer (pão, carne, alface e tomate)", "price": 10.0, "cat": "Sanduíches"}, {"name": "X-Burguer (pão, carne, queijo, alface e tomate)", "price": 11.0, "cat": "Sanduíches"}, {"name": "Bauru (pão, carne, queijo, ovo, alface e tomate)", "price": 12.0, "cat": "Sanduíches"}, {"name": "X-Tudo (pão, carne, queijo, presunto, ovo, alface e tomate)", "price": 15.0, "cat": "Sanduíches"}, {"name": "X-Egg (pão, ovo e queijo)", "price": 7.0, "cat": "Sanduíches"}, {"name": "Misto (pão, queijo e presunto)", "price": 8.0, "cat": "Sanduíches"}, {"name": "Pão com Ovo (pão e ovo)", "price": 5.0, "cat": "Sanduíches"}, {"name": "Pão na Chapa (pão com manteiga)", "price": 3.0, "cat": "Sanduíches"}, {"name": "Queijo Quente (pão e queijo)", "price": 6.0, "cat": "Sanduíches"}, {"name": "Chocolate", "price": 2.0, "cat": "Bomboniere"}, {"name": "Pirulito Pop", "price": 2.0, "cat": "Bomboniere"}, {"name": "Jujuba", "price": 2.0, "cat": "Bomboniere"}, {"name": "Cocada", "price": 2.5, "cat": "Bomboniere"}, {"name": "Pastilha Halls", "price": 3.0, "cat": "Bomboniere"}, {"name": "Café Pequeno", "price": 2.0, "cat": "Bebidas"}, {"name": "Café Grande", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Pequeno", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Grande", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante 250ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante Lata", "price": 5.5, "cat": "Bebidas"}, {"name": "Refrigerante 600ml", "price": 6.0, "cat": "Bebidas"}, {"name": "Refrigerante 1L", "price": 8.0, "cat": "Bebidas"}, {"name": "Refrigerante 2L", "price": 13.0, "cat": "Bebidas"}, {"name": "Nescau", "price": 3.5, "cat": "Bebidas"}, {"name": "Tampico 300ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Água 500ml", "price": 2.5, "cat": "Bebidas"}, {"name": "Água com Gás", "price": 3.5, "cat": "Bebidas"}, {"name": "Vitamina de Manga", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Acerola", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Goiaba", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Cajá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Maracujá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Ameixa", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Morango", "price": 8.0, "cat": "Vitaminas"}, {"name": "Vitamina com Pó de Guaraná", "price": 8.0, "cat": "Vitaminas"}, {"name": "Açaí com Banana", "price": 10.0, "cat": "Vitaminas"}, {"name": "Copo de Suco 150ml", "price": 2.0, "cat": "Sucos"}, {"name": "Copo de Suco 300ml", "price": 3.0, "cat": "Sucos"}];
+const DEFAULT_PRODUCTS = [{"name": "Cuscuz com Manteiga", "price": 4.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo", "price": 5.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Presunto e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Cuscuz"}, {"name": "Tapioca Simples", "price": 3.0, "cat": "Tapiocas"}, {"name": "Tapioca com Presunto e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo", "price": 5.0, "cat": "Tapiocas"}, {"name": "Tapioca com Queijo", "price": 6.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Fatia de Bolo", "price": 4.0, "cat": "Diversos"}, {"name": "Hot Dog", "price": 7.0, "cat": "Diversos"}, {"name": "Salgados", "price": 5.0, "cat": "Diversos"}, {"name": "Porção de Guarnição", "price": 2.0, "cat": "Diversos"}, {"name": "Porção de Proteína", "price": 4.0, "cat": "Diversos"}, {"name": "Almoço Pequeno (1 guarnição)", "price": 13.0, "cat": "Almoço", "alias": "pratinho"}, {"name": "Almoço Grande (2 guarnições)", "price": 18.0, "cat": "Almoço"}, {"name": "Hambúrguer (pão, carne, alface e tomate)", "price": 10.0, "cat": "Sanduíches"}, {"name": "X-Burguer (pão, carne, queijo, alface e tomate)", "price": 11.0, "cat": "Sanduíches"}, {"name": "Bauru (pão, carne, queijo, ovo, alface e tomate)", "price": 12.0, "cat": "Sanduíches"}, {"name": "X-Tudo (pão, carne, queijo, presunto, ovo, alface e tomate)", "price": 15.0, "cat": "Sanduíches"}, {"name": "X-Egg (pão, ovo e queijo)", "price": 7.0, "cat": "Sanduíches"}, {"name": "Misto (pão, queijo e presunto)", "price": 8.0, "cat": "Sanduíches"}, {"name": "Pão com Ovo (pão e ovo)", "price": 5.0, "cat": "Sanduíches"}, {"name": "Pão na Chapa (pão com manteiga)", "price": 3.0, "cat": "Sanduíches"}, {"name": "Queijo Quente (pão e queijo)", "price": 6.0, "cat": "Sanduíches"}, {"name": "Chocolate", "price": 2.0, "cat": "Bomboniere"}, {"name": "Pirulito Pop", "price": 2.0, "cat": "Bomboniere"}, {"name": "Jujuba", "price": 2.0, "cat": "Bomboniere"}, {"name": "Paçoquita", "price": 1.5, "cat": "Bomboniere"}, {"name": "Cocada", "price": 2.5, "cat": "Bomboniere"}, {"name": "Pastilha Halls", "price": 3.0, "cat": "Bomboniere"}, {"name": "Biscoito Recheado G", "price": 3.5, "cat": "Bomboniere"}, {"name": "Café Pequeno", "price": 2.0, "cat": "Bebidas"}, {"name": "Café Grande", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Pequeno", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Grande", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante 250ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante Lata", "price": 5.5, "cat": "Bebidas"}, {"name": "Refrigerante 600ml", "price": 6.0, "cat": "Bebidas"}, {"name": "Refrigerante 1L", "price": 8.0, "cat": "Bebidas"}, {"name": "Refrigerante 2L", "price": 13.0, "cat": "Bebidas"}, {"name": "Nescau", "price": 3.5, "cat": "Bebidas"}, {"name": "Tampico 300ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Água 500ml", "price": 2.5, "cat": "Bebidas"}, {"name": "Água com Gás", "price": 3.5, "cat": "Bebidas"}, {"name": "Vitamina de Manga", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Acerola", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Goiaba", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Cajá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Maracujá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Ameixa", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Morango", "price": 8.0, "cat": "Vitaminas"}, {"name": "Vitamina com Pó de Guaraná", "price": 8.0, "cat": "Vitaminas"}, {"name": "Açaí com Banana", "price": 10.0, "cat": "Vitaminas"}, {"name": "Copo de Suco 150ml", "price": 2.0, "cat": "Sucos"}, {"name": "Copo de Suco 300ml", "price": 3.0, "cat": "Sucos"}];
 function loadDefaultProducts(){
   if(!confirm(`Isso vai adicionar os ${DEFAULT_PRODUCTS.length} produtos padrão do cardápio da Dunnas (cuscuz, tapiocas, sanduíches, bebidas, vitaminas, sucos e almoço).\n\nSe algum produto já existir com o mesmo nome, o preço dele será atualizado pro valor padrão. Produtos que você já tem com outros nomes não são afetados. Clientes e fiados não são alterados.\n\nContinuar?`)) return;
   const { added, updated } = upsertProductsList(DEFAULT_PRODUCTS);
@@ -1684,6 +1799,29 @@ async function removerPedido(orderId){
 
 /* ---------- NOVO PEDIDO ---------- */
 const CATEGORY_ORDER = ['Sanduíches','Cuscuz','Tapiocas','Diversos','Bomboniere','Vitaminas','Sucos','Bebidas'];
+function byPriceThenName(a,b){
+  return (a.price-b.price) || a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'});
+}
+// Exceções manuais de ordem: força um produto a ficar logo depois de outro,
+// mesmo que preço/ordem alfabética diriam outra coisa.
+const MANUAL_ORDER_PINS = [
+  {after:'Porção de Guarnição', item:'Porção de Proteína'}
+];
+function applyManualOrderPins(items){
+  MANUAL_ORDER_PINS.forEach(({after, item})=>{
+    const itemIdx = items.findIndex(p=>p.name===item);
+    if(itemIdx===-1) return;
+    const afterIdx = items.findIndex(p=>p.name===after);
+    if(afterIdx===-1 || itemIdx===afterIdx+1) return;
+    const [moved] = items.splice(itemIdx,1);
+    const newAfterIdx = items.findIndex(p=>p.name===after);
+    items.splice(newAfterIdx+1,0,moved);
+  });
+  return items;
+}
+function sortProducts(items){
+  return applyManualOrderPins(items.slice().sort(byPriceThenName));
+}
 function renderPedidoForm(){
   const sel = document.getElementById('pedCliente');
   const options = DB.clients.slice().sort((a,b)=>a.name.localeCompare(b.name))
@@ -1722,7 +1860,7 @@ function renderProdutoChips(filter){
   orderedCats.forEach(cat=>{
     const icon = CATEGORY_ICONS[cat] || '🍴';
     html += `<div class="product-cat-header"><span class="pch-icon">${icon}</span><span class="pch-label">${escapeHtml(cat)}</span></div>`;
-    byCat[cat].sort((a,b)=>a.price-b.price).forEach(p=>{
+    sortProducts(byCat[cat]).forEach(p=>{
       const on = pedQtyMap[p.id] ? ' on' : '';
       html += `<div class="product-pick-row${on}" id="chip-${p.id}" onclick="toggleChip('${p.id}')">
         <span class="ppr-check">${pedQtyMap[p.id]?'✓':''}</span>
@@ -1962,7 +2100,7 @@ function renderCardapio(){
   let html = '<div class="menu-sheet"><h2>Cardápio · Dunnas</h2>';
   orderedCats.forEach(cat=>{
     html += `<div class="menu-cat">${escapeHtml(cat)}</div>`;
-    byCat[cat].sort((a,b)=>a.price-b.price).forEach(p=>{
+    sortProducts(byCat[cat]).forEach(p=>{
       html += `<div class="menu-item-wrap">
         <div class="menu-item"><span>${escapeHtml(p.name)}</span><span class="dots"></span><span class="menu-price">${brl(p.price)}</span></div>
         ${p.desc?`<div class="menu-item-desc">${escapeHtml(p.desc)}</div>`:''}
@@ -1982,29 +2120,163 @@ function openFullscreenView(innerHtml){
   document.body.appendChild(overlay);
   return overlay;
 }
+/* ---------- Pré-visualização antes de baixar/compartilhar ---------- */
+function showExportPreview(blobs, opts){
+  const urls = blobs.map(b=>URL.createObjectURL(b));
+  const imgsHtml = urls.map((u,i)=>`
+    <div class="export-preview-page">
+      ${blobs.length>1?`<div class="export-preview-page-label">Parte ${i+1} de ${blobs.length}</div>`:''}
+      <img src="${u}" alt="Pré-visualização">
+    </div>`).join('');
+  const overlay = document.createElement('div');
+  overlay.className = 'export-preview-overlay';
+  overlay.id = 'exportPreviewOverlay';
+  overlay.innerHTML = `<div class="export-preview-content">
+    <button class="btn-ghost btn-small" style="margin-bottom:10px;" onclick="closeExportPreview()">✕ Fechar</button>
+    <div class="card">
+      <h2 style="margin-top:0;">${escapeHtml(opts.title)}</h2>
+      <p style="font-size:.75rem; color:var(--paper-dim); margin:0;">${blobs.length>1 ? `Serão geradas ${blobs.length} imagens — confira antes de continuar.` : 'Confira antes de baixar ou compartilhar.'}</p>
+    </div>
+    ${imgsHtml}
+    <div class="row" style="margin-bottom:8px;">
+      <button class="btn-ghost" onclick="closeExportPreview()">Cancelar</button>
+      <button class="btn-ghost" onclick="confirmExportPreview('download')">⬇ Baixar</button>
+    </div>
+    <button class="btn-main" style="width:100%; margin-top:0;" onclick="confirmExportPreview('share')">📤 Compartilhar</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  window._exportPreview = {blobs, urls, opts};
+}
+function closeExportPreview(){
+  const overlay = document.getElementById('exportPreviewOverlay');
+  if(overlay) overlay.remove();
+  if(window._exportPreview){
+    window._exportPreview.urls.forEach(u=>URL.revokeObjectURL(u));
+    window._exportPreview = null;
+  }
+}
+async function confirmExportPreview(action){
+  const state = window._exportPreview;
+  if(!state) return;
+  const {blobs, opts} = state;
+  closeExportPreview();
+  if(action==='download') await opts.onDownload(blobs);
+  else await opts.onShare(blobs);
+}
 function fullscreenCardapio(){
   const content = document.querySelector('#cardapioArea .menu-sheet');
   if(!content){ toast('Gere o cardápio primeiro'); return; }
   openFullscreenView(content.outerHTML);
 }
-function printCardapio(){
-  const content = document.querySelector('#cardapioArea .menu-sheet');
-  if(!content){ toast('Gere o cardápio primeiro'); return; }
-  document.getElementById('printArea').innerHTML = content.outerHTML;
-  window.print();
+/* ---------- Geração de imagens paginadas (evita imagens gigantes/pixeladas) ---------- */
+async function captureSheetPages(pageHtmls, sheetWidth){
+  const holder = document.createElement('div');
+  holder.style.cssText = `position:fixed; left:-9999px; top:0; width:${sheetWidth||700}px; background:#f2e9d8;`;
+  document.body.appendChild(holder);
+  const blobs = [];
+  try{
+    for(const html of pageHtmls){
+      holder.innerHTML = html;
+      const el = holder.firstElementChild;
+      const canvas = await html2canvas(el, {backgroundColor:'#f2e9d8', scale:2});
+      const blob = await new Promise(res=>canvas.toBlob(res));
+      if(blob) blobs.push(blob);
+    }
+  } finally {
+    holder.remove();
+  }
+  return blobs;
 }
-function downloadCardapioImage(){
-  const content = document.querySelector('#cardapioArea .menu-sheet');
-  if(!content){ toast('Gere o cardápio primeiro'); return; }
-  if(typeof html2canvas === 'undefined'){ toast('Sem conexão pra gerar imagem agora. Tente de novo com internet.'); return; }
-  toast('Gerando imagem...');
-  html2canvas(content, {backgroundColor:'#f2e9d8', scale:2}).then(canvas=>{
-    canvas.toBlob(blob=>{
-      downloadBlobFile(blob, `dunnas-cardapio-${todayISO()}.png`);
-      toast('Imagem do cardápio baixada!');
+function buildCardapioPages(){
+  const byCat = {};
+  DB.products.forEach(p=>{ (byCat[p.cat||'Outros'] = byCat[p.cat||'Outros']||[]).push(p); });
+  const catsPresent = Object.keys(byCat);
+  const orderedCats = CATEGORY_ORDER.filter(c=>catsPresent.includes(c))
+    .concat(catsPresent.filter(c=>!CATEGORY_ORDER.includes(c)).sort());
+  const LINES_PER_PAGE = 34;
+  const pages = [];
+  let current = [];
+  let currentLines = 0;
+  const flush = ()=>{ if(current.length){ pages.push(current); current=[]; currentLines=0; } };
+  orderedCats.forEach(cat=>{
+    const items = sortProducts(byCat[cat]);
+    const lineCost = p => 1 + (p.desc ? 0.6 : 0);
+    const fullLines = 1.6 + items.reduce((s,p)=>s+lineCost(p), 0);
+    if(fullLines > LINES_PER_PAGE){
+      // categoria grande demais pra uma página sozinha: divide os itens dela
+      let chunk = []; let chunkLines = 1.6;
+      items.forEach(p=>{
+        const c = lineCost(p);
+        if(chunkLines + c > LINES_PER_PAGE && chunk.length){
+          current.push({cat, items:chunk}); currentLines += chunkLines;
+          flush();
+          chunk = []; chunkLines = 1.6;
+        }
+        chunk.push(p); chunkLines += c;
+      });
+      if(chunk.length){ current.push({cat, items:chunk}); currentLines += chunkLines; }
+      return;
+    }
+    if(currentLines + fullLines > LINES_PER_PAGE) flush();
+    current.push({cat, items});
+    currentLines += fullLines;
+  });
+  flush();
+  return pages.length ? pages : [[]];
+}
+function renderCardapioPageHtml(pageCats, pageIndex, totalPages){
+  const titleSuffix = totalPages>1 ? ` <span style="font-size:.5em; color:#8a7a54;">(parte ${pageIndex}/${totalPages})</span>` : '';
+  let html = `<div class="menu-sheet"><h2>Cardápio · Dunnas${titleSuffix}</h2>`;
+  pageCats.forEach(({cat, items})=>{
+    html += `<div class="menu-cat">${escapeHtml(cat)}</div>`;
+    items.forEach(p=>{
+      html += `<div class="menu-item-wrap">
+        <div class="menu-item"><span>${escapeHtml(p.name)}</span><span class="dots"></span><span class="menu-price">${brl(p.price)}</span></div>
+        ${p.desc?`<div class="menu-item-desc">${escapeHtml(p.desc)}</div>`:''}
+      </div>`;
     });
-  }).catch(err=>{ console.error(err); toast('Erro ao gerar imagem'); });
+  });
+  html += '</div>';
+  return html;
 }
+async function generateCardapioImageBlobs(){
+  const pages = buildCardapioPages();
+  const htmlPages = pages.map((p,i)=>renderCardapioPageHtml(p, i+1, pages.length));
+  return captureSheetPages(htmlPages, 700);
+}
+function performCardapioDownload(blobs){
+  blobs.forEach((blob,i)=>{
+    const suffix = blobs.length>1 ? `-parte${i+1}de${blobs.length}` : '';
+    downloadBlobFile(blob, `dunnas-cardapio${suffix}-${todayISO()}.png`);
+  });
+  toast(blobs.length>1 ? `Cardápio baixado em ${blobs.length} imagens (pra ficar legível)!` : 'Imagem do cardápio baixada!');
+}
+async function performCardapioShare(blobs){
+  const files = blobs.map((blob,i)=>new File([blob], `dunnas-cardapio${blobs.length>1?'-parte'+(i+1):''}.png`, {type:'image/png'}));
+  try{
+    if(navigator.canShare && navigator.canShare({files})){
+      await navigator.share({files, title:'Cardápio Dunnas', text:'Confira nosso cardápio!'});
+      return;
+    }
+  }catch(err){ /* usuário cancelou o compartilhamento, sem problema */ return; }
+  blobs.forEach((blob,i)=>downloadBlobFile(blob, files[i].name));
+  toast('Compartilhamento direto não disponível nesse navegador — imagem(ns) baixada(s) pra enviar manualmente.');
+}
+async function openCardapioExportPreview(){
+  if(!DB.products.length){ toast('Gere o cardápio primeiro'); return; }
+  if(typeof html2canvas === 'undefined'){ toast('Sem conexão pra gerar imagem agora. Tente de novo com internet.'); return; }
+  toast('Gerando pré-visualização...');
+  try{
+    const blobs = await generateCardapioImageBlobs();
+    showExportPreview(blobs, {
+      title: 'Pré-visualização do cardápio',
+      onDownload: performCardapioDownload,
+      onShare: performCardapioShare
+    });
+  }catch(err){ console.error(err); toast('Erro ao gerar imagem'); }
+}
+function downloadCardapioImage(){ return openCardapioExportPreview(); }
+function shareCardapioImage(){ return openCardapioExportPreview(); }
 
 /* ---------- ESTATÍSTICAS ---------- */
 let statsRef = new Date();
