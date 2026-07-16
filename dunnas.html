@@ -677,6 +677,7 @@
       <h2>Notas de atualização</h2>
       <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mais recente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0 0 12px;">
+        <li>Cardápio e Extrato: quando a imagem é dividida em várias partes, o indicador "Parte X/Y" virou um selo no canto superior direito em vez de texto colado no título — o nome do cliente/cardápio não desloca mais pra esquerda. Também deixamos "Extrato gerado em..." e "Total em aberto" com cinza mais escuro e legível (antes estavam apagados demais)</li>
         <li>Baixar várias imagens do Cardápio/Extrato agora acontece uma de cada vez, com pequeno intervalo e barra de progresso — evita o navegador bloquear/pedir permissão por causa de vários downloads simultâneos</li>
         <li>Configurações do extrato ganharam controle manual da divisão de imagens (automática, manual com nº de linhas por imagem, ou forçar imagem única) — útil pra corrigir na mão se a divisão automática sair errada</li>
         <li>Baixar ou compartilhar o cardápio e o extrato agora mostra uma pré-visualização de todas as imagens antes de confirmar</li>
@@ -694,22 +695,15 @@
         <li>Corrigido de vez: título "Dunnas Gerenciamento" tem um limite máximo de tamanho, garantindo que nunca mais quebre palavra no meio em nenhum tamanho de fonte</li>
         <li>Seleção de produtos no Fiado redesenhada: cada categoria com ícone próprio, produtos em cartões com preço em destaque e marcação (✓) clara de selecionado</li>
         <li>Corrigido: aviso "selecione um cliente" não fica mais colado na barra do carrinho</li>
-        <li>Nova categoria "Bomboniere" (Chocolate, Pirulito Pop, Jujuba, Cocada, Pastilha Halls) — já disponível no cardápio, no cadastro de produto e nos produtos padrão</li>
-        <li>Duas novas opções em Diversos: Porção de Guarnição e Porção de Proteína</li>
-        <li>Aba Fiado não vem mais com o primeiro cliente da lista pré-selecionado — agora precisa escolher de propósito, evitando mandar fiado pra pessoa errada por esquecimento</li>
-        <li>Novo botão "Resetar estatísticas" em Configurações — zera os números da aba Stats sem apagar nenhum pedido, produto ou dívida</li>
-        <li>Corrigido: aba Stats principal agora respeita esse reset (antes só a tela Início respeitava)</li>
-        <li>Corrigido bug real no backup: um campo de configuração interna não estava sendo salvo/restaurado ao importar — testado e confirmado que agora bate 100%</li>
-        <li>Resumo da tela inicial: trocado o sistema de colunas por uma coluna só, garantindo que nunca mais vaze da tela em nenhum tamanho de letra</li>
-        <li>"Clientes frequentes" na aba Stats ganhou o mesmo visual dos Maiores devedores (bolinha numerada + barra), em vez de texto solto</li>
-        <li>"Limpar histórico" renomeado pra "Limpar extrato" — nome mais claro, já que ele só limpa a ficha do cliente, sem apagar nada do Calendário ou das Estatísticas</li>
-        <li>Corrigido: Resumo da tela inicial não estoura mais a tela no tamanho "Máximo" — reorganiza sozinho e o número não quebra mais no meio da vírgula</li>
-        <li>Aba Stats reformulada por completo: navegação por mês, resumo (fiado, recebido, ticket médio, quantidade), gráfico de barras do faturamento por dia, destaque do melhor dia do mês (com % do total), faturamento por categoria — tudo com gráficos de verdade</li>
-        <li>Cor e tamanho do nome do cliente agora personalizáveis nas configurações do extrato</li>
-        <li>Backup automático já vem ativado de fábrica: celular a cada 6h, Discord a cada 1h (mesmo sem link configurado ainda)</li>
       </ul>
       <p style="font-size:.8rem; color:var(--paper-dim); margin:0 0 4px;">Anteriormente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0;">
+        <li><strong>Stats:</strong> aba reformulada por completo (navegação por mês, resumo de fiado/recebido/ticket médio, gráfico de faturamento por dia, melhor dia do mês, faturamento por categoria), "Clientes frequentes" com visual de bolinha numerada + barra, botão de resetar estatísticas sem apagar pedidos</li>
+        <li><strong>Backup:</strong> corrigido bug de campo de configuração não salvo/restaurado ao importar; backup automático ativado de fábrica (celular a cada 6h, Discord a cada 1h)</li>
+        <li><strong>Produtos:</strong> categoria Bomboniere criada (Chocolate, Pirulito Pop, Jujuba, Cocada, Pastilha Halls), Porção de Guarnição e Porção de Proteína adicionadas</li>
+        <li><strong>Fiado:</strong> não vem mais com o primeiro cliente da lista pré-selecionado, evitando mandar fiado pra pessoa errada por esquecimento</li>
+        <li><strong>Extrato:</strong> "Limpar histórico" renomeado pra "Limpar extrato" (nome mais claro); cor e tamanho do nome do cliente personalizáveis nas configurações</li>
+        <li><strong>Tela inicial:</strong> resumo trocado pra uma coluna só, sem vazar da tela em nenhum tamanho de letra</li>
         <li><strong>Extrato:</strong> reformulado em blocos por dia, preços destacados, tela cheia com baixar/compartilhar imagem</li>
         <li><strong>Cardápio:</strong> ordenado por preço dentro de cada categoria, tela cheia, baixar e imprimir, preços destacados</li>
         <li><strong>Fiado:</strong> carrinho com barra fixa no rodapé, tela de revisão antes de confirmar, seleção de produtos por categoria com busca, vírgula automática no preço</li>
@@ -973,9 +967,9 @@ function buildClientStatementHtml(id){
   entries.sort((a,b)=> a.date<b.date?1:-1);
   let html = `<div class="menu-sheet" id="clientStatementSheet" style="background:${prefs.bg}; font-size:${Math.round(16*prefs.scale)}px; --stmt-text:${prefs.text}; --stmt-price:${prefs.price};">
     <h2 style="color:${prefs.nameColor}; font-size:${prefs.nameScale}em;">${escapeHtml(c.name)}</h2>
-    <div style="text-align:center; font-size:.72em; color:#888; margin-bottom:12px;">Extrato gerado em ${fmtDate(todayISO())} · Dunnas Alimentação Corporativa</div>
+    <div style="text-align:center; font-size:.72em; color:#4a4438; font-weight:700; margin-bottom:12px;">Extrato gerado em ${fmtDate(todayISO())} · Dunnas Alimentação Corporativa</div>
     <div style="text-align:center; margin:10px 0 18px;">
-      <div style="font-size:.68em; text-transform:uppercase; letter-spacing:.1em; color:#888;">Total em aberto</div>
+      <div style="font-size:.68em; text-transform:uppercase; letter-spacing:.1em; color:#4a4438; font-weight:700;">Total em aberto</div>
       <div style="font-size:1.9em; font-weight:700; color:${debt>0?'#a54a2a':'#5c6b3f'};">${brl(debt)}</div>
     </div>
     <div class="menu-cat" style="color:#5c6b3f; font-size:1em;">Histórico detalhado</div>`;
@@ -1159,23 +1153,27 @@ function buildStatementPages(id){
   if(current.length || !entries.length) pages.push(current);
   return {c, debt, prefs, pages};
 }
+function partBadgeHtml(pageIndex, totalPages){
+  if(totalPages<=1) return '';
+  return `<div style="position:absolute; top:14px; right:14px; font-size:.6em; font-weight:700; color:#a54a2a; border:1.5px solid #a54a2a; padding:3px 9px; border-radius:12px; letter-spacing:.06em; text-transform:uppercase; background:rgba(165,74,42,0.08); white-space:nowrap;">Parte ${pageIndex}/${totalPages}</div>`;
+}
 function renderStatementPageHtml(entries, c, debt, prefs, pageIndex, totalPages){
   let header;
   if(pageIndex===1){
     header = `<h2 style="color:${prefs.nameColor}; font-size:${prefs.nameScale}em;">${escapeHtml(c.name)}</h2>
-      <div style="text-align:center; font-size:.72em; color:#888; margin-bottom:12px;">Extrato gerado em ${fmtDate(todayISO())} · Dunnas Alimentação Corporativa${totalPages>1?` · parte 1/${totalPages}`:''}</div>
+      <div style="text-align:center; font-size:.72em; color:#4a4438; font-weight:700; margin-bottom:12px;">Extrato gerado em ${fmtDate(todayISO())} · Dunnas Alimentação Corporativa</div>
       <div style="text-align:center; margin:10px 0 18px;">
-        <div style="font-size:.68em; text-transform:uppercase; letter-spacing:.1em; color:#888;">Total em aberto</div>
+        <div style="font-size:.68em; text-transform:uppercase; letter-spacing:.1em; color:#4a4438; font-weight:700;">Total em aberto</div>
         <div style="font-size:1.9em; font-weight:700; color:${debt>0?'#a54a2a':'#5c6b3f'};">${brl(debt)}</div>
       </div>
       <div class="menu-cat" style="color:#5c6b3f; font-size:1em;">Histórico detalhado</div>`;
   } else {
-    header = `<h2 style="color:${prefs.nameColor}; font-size:${Math.max(1,prefs.nameScale*0.7)}em;">${escapeHtml(c.name)} <span style="font-size:.5em; color:#888;">(parte ${pageIndex}/${totalPages})</span></h2>`;
+    header = `<h2 style="color:${prefs.nameColor}; font-size:${Math.max(1,prefs.nameScale*0.7)}em;">${escapeHtml(c.name)}</h2>`;
   }
   const body = entries.length
     ? entries.map(e=>statementEntryHtml(e, prefs)).join('')
     : '<div style="text-align:center; color:#999; font-style:italic; padding:16px 4px;">Nenhum registro ainda.</div>';
-  return `<div class="menu-sheet" style="background:${prefs.bg}; font-size:${Math.round(16*prefs.scale)}px; --stmt-text:${prefs.text}; --stmt-price:${prefs.price};">${header}${body}</div>`;
+  return `<div class="menu-sheet" style="position:relative; background:${prefs.bg}; font-size:${Math.round(16*prefs.scale)}px; --stmt-text:${prefs.text}; --stmt-price:${prefs.price};">${partBadgeHtml(pageIndex,totalPages)}${header}${body}</div>`;
 }
 async function generateStatementImageBlobs(id){
   const built = buildStatementPages(id);
@@ -2235,8 +2233,7 @@ function buildCardapioPages(){
   return pages.length ? pages : [[]];
 }
 function renderCardapioPageHtml(pageCats, pageIndex, totalPages){
-  const titleSuffix = totalPages>1 ? ` <span style="font-size:.5em; color:#8a7a54;">(parte ${pageIndex}/${totalPages})</span>` : '';
-  let html = `<div class="menu-sheet"><h2>Cardápio · Dunnas${titleSuffix}</h2>`;
+  let html = `<div class="menu-sheet" style="position:relative;">${partBadgeHtml(pageIndex,totalPages)}<h2>Cardápio · Dunnas</h2>`;
   pageCats.forEach(({cat, items})=>{
     html += `<div class="menu-cat">${escapeHtml(cat)}</div>`;
     items.forEach(p=>{
