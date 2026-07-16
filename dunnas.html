@@ -302,6 +302,15 @@
   .export-preview-page img{width:100%; border-radius:6px; border:1px solid var(--line); display:block; background:#fff;}
   .export-preview-page-label{font-size:.72rem; color:var(--paper-dim); margin-bottom:4px;}
 
+  .download-progress-bar{
+    position:fixed; left:0; right:0; bottom:58px; z-index:97;
+    background:var(--umber-2); border-top:2px solid var(--mustard);
+    padding:10px 16px 12px;
+  }
+  .download-progress-label{font-size:.78rem; color:var(--paper); margin-bottom:6px; text-align:center;}
+  .download-progress-track{background:var(--umber); border-radius:4px; height:7px; overflow:hidden;}
+  .download-progress-fill{background:var(--mustard); height:100%; border-radius:4px; transition:width .25s ease;}
+
   .fiado-confirm-overlay{
     position:fixed; inset:0; background:rgba(10,8,4,.82); z-index:70;
     display:flex; align-items:center; justify-content:center; padding:20px;
@@ -668,6 +677,7 @@
       <h2>Notas de atualização</h2>
       <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mais recente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0 0 12px;">
+        <li>Baixar várias imagens do Cardápio/Extrato agora acontece uma de cada vez, com pequeno intervalo e barra de progresso — evita o navegador bloquear/pedir permissão por causa de vários downloads simultâneos</li>
         <li>Configurações do extrato ganharam controle manual da divisão de imagens (automática, manual com nº de linhas por imagem, ou forçar imagem única) — útil pra corrigir na mão se a divisão automática sair errada</li>
         <li>Baixar ou compartilhar o cardápio e o extrato agora mostra uma pré-visualização de todas as imagens antes de confirmar</li>
         <li>Exceção manual de ordem: "Porção de Proteína" sempre aparece logo depois de "Porção de Guarnição", mesmo fugindo da lógica de preço/ordem alfabética</li>
@@ -1175,11 +1185,11 @@ async function generateStatementImageBlobs(id){
   const blobs = await captureSheetPages(htmlPages, 700);
   return {blobs, clientName: c.name};
 }
-function performStatementDownload(blobs, clientName){
+async function performStatementDownload(blobs, clientName){
   const safeName = clientName.replace(/\s+/g,'-');
-  blobs.forEach((blob,i)=>{
+  await downloadBlobFilesSequential(blobs, i=>{
     const suffix = blobs.length>1 ? `-parte${i+1}de${blobs.length}` : '';
-    downloadBlobFile(blob, `extrato-${safeName}${suffix}-${todayISO()}.png`);
+    return `extrato-${safeName}${suffix}-${todayISO()}.png`;
   });
   toast(blobs.length>1 ? `Extrato baixado em ${blobs.length} imagens (pra ficar legível)!` : 'Imagem baixada!');
 }
@@ -1192,7 +1202,7 @@ async function performStatementShare(blobs, clientName){
       return;
     }
   }catch(err){ /* usuário cancelou o compartilhamento, sem problema */ return; }
-  blobs.forEach((blob,i)=>downloadBlobFile(blob, files[i].name));
+  await downloadBlobFilesSequential(blobs, i=>files[i].name);
   toast('Compartilhamento direto não disponível nesse navegador — imagem(ns) baixada(s) pra enviar manualmente.');
 }
 async function openStatementExportPreview(id){
@@ -2244,10 +2254,10 @@ async function generateCardapioImageBlobs(){
   const htmlPages = pages.map((p,i)=>renderCardapioPageHtml(p, i+1, pages.length));
   return captureSheetPages(htmlPages, 700);
 }
-function performCardapioDownload(blobs){
-  blobs.forEach((blob,i)=>{
+async function performCardapioDownload(blobs){
+  await downloadBlobFilesSequential(blobs, i=>{
     const suffix = blobs.length>1 ? `-parte${i+1}de${blobs.length}` : '';
-    downloadBlobFile(blob, `dunnas-cardapio${suffix}-${todayISO()}.png`);
+    return `dunnas-cardapio${suffix}-${todayISO()}.png`;
   });
   toast(blobs.length>1 ? `Cardápio baixado em ${blobs.length} imagens (pra ficar legível)!` : 'Imagem do cardápio baixada!');
 }
@@ -2259,7 +2269,7 @@ async function performCardapioShare(blobs){
       return;
     }
   }catch(err){ /* usuário cancelou o compartilhamento, sem problema */ return; }
-  blobs.forEach((blob,i)=>downloadBlobFile(blob, files[i].name));
+  await downloadBlobFilesSequential(blobs, i=>files[i].name);
   toast('Compartilhamento direto não disponível nesse navegador — imagem(ns) baixada(s) pra enviar manualmente.');
 }
 async function openCardapioExportPreview(){
@@ -2552,6 +2562,48 @@ function downloadBlobFile(blob, filename){
   a.href = url; a.download = filename;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+function sleep(ms){ return new Promise(res=>setTimeout(res, ms)); }
+function showDownloadProgress(total){
+  const bar = document.createElement('div');
+  bar.className = 'download-progress-bar';
+  bar.id = 'downloadProgressBar';
+  bar.innerHTML = `
+    <div class="download-progress-label" id="downloadProgressLabel">Baixando imagem 1 de ${total}...</div>
+    <div class="download-progress-track"><div class="download-progress-fill" id="downloadProgressFill" style="width:0%"></div></div>
+  `;
+  document.body.appendChild(bar);
+}
+function updateDownloadProgress(current, total){
+  const label = document.getElementById('downloadProgressLabel');
+  const fill = document.getElementById('downloadProgressFill');
+  if(label) label.textContent = current<=total ? `Baixando imagem ${current} de ${total}...` : 'Concluído!';
+  if(fill) fill.style.width = Math.min(100, Math.round((current/total)*100)) + '%';
+}
+function hideDownloadProgress(){
+  const bar = document.getElementById('downloadProgressBar');
+  if(bar) bar.remove();
+}
+// Baixa vários arquivos em sequência com pequenos intervalos, em vez de todos de
+// uma vez — celulares costumam bloquear/pedir permissão quando várias janelas de
+// download são disparadas juntas. Pra 1 arquivo só, baixa direto sem barra.
+async function downloadBlobFilesSequential(blobs, filenameFn){
+  if(blobs.length <= 1){
+    if(blobs.length===1) downloadBlobFile(blobs[0], filenameFn(0));
+    return;
+  }
+  showDownloadProgress(blobs.length);
+  try{
+    for(let i=0; i<blobs.length; i++){
+      updateDownloadProgress(i+1, blobs.length);
+      downloadBlobFile(blobs[i], filenameFn(i));
+      if(i < blobs.length-1) await sleep(900);
+    }
+    updateDownloadProgress(blobs.length+1, blobs.length);
+    await sleep(600);
+  } finally {
+    hideDownloadProgress();
+  }
 }
 function generateIconFiles(){
   const name = (document.getElementById('iconAppName').value || 'Dunnas').trim();
