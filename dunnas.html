@@ -154,6 +154,8 @@
     gap:8px;
   }
   .list-item:last-child{border-bottom:none;}
+  button.list-item{ appearance:none; -webkit-appearance:none; background:none; border:none; margin:0; width:100%; font:inherit; color:inherit; text-align:left; cursor:pointer; }
+  button.product-cat-header{ appearance:none; -webkit-appearance:none; background:none; border:none; margin:0; width:100%; font:inherit; color:inherit; text-align:left; cursor:pointer; }
   .list-item .name{font-weight:700; color:var(--paper);}
   .list-item .meta{font-size:.72rem; color:var(--paper-dim);}
   .tag{
@@ -1363,7 +1365,7 @@ function onCatSelectChange(){
   document.getElementById('novoProdCatCustom').style.display = sel.value==='__custom__' ? 'block' : 'none';
 }
 
-const DEFAULT_PRODUCTS = [{"name": "Cuscuz com Manteiga", "price": 4.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo", "price": 5.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Presunto e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Cuscuz"}, {"name": "Tapioca Simples", "price": 3.0, "cat": "Tapiocas"}, {"name": "Tapioca com Presunto e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo", "price": 5.0, "cat": "Tapiocas"}, {"name": "Tapioca com Queijo", "price": 6.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Fatia de Bolo", "price": 4.0, "cat": "Diversos"}, {"name": "Hot Dog", "price": 7.0, "cat": "Diversos"}, {"name": "Salgados", "price": 5.0, "cat": "Diversos"}, {"name": "Porção de Guarnição", "price": 2.0, "cat": "Diversos"}, {"name": "Porção de Proteína", "price": 4.0, "cat": "Diversos"}, {"name": "Vitamina de Açaí", "price": 8.0, "cat": "Diversos"}, {"name": "Almoço Pequeno (1 guarnição)", "price": 13.0, "cat": "Almoço", "alias": "pratinho"}, {"name": "Almoço Grande (2 guarnições)", "price": 18.0, "cat": "Almoço"}, {"name": "Hambúrguer (pão, carne, alface e tomate)", "price": 10.0, "cat": "Sanduíches"}, {"name": "X-Burguer (pão, carne, queijo, alface e tomate)", "price": 11.0, "cat": "Sanduíches"}, {"name": "Bauru (pão, carne, queijo, ovo, alface e tomate)", "price": 12.0, "cat": "Sanduíches"}, {"name": "X-Tudo (pão, carne, queijo, presunto, ovo, alface e tomate)", "price": 15.0, "cat": "Sanduíches"}, {"name": "X-Egg (pão, ovo e queijo)", "price": 7.0, "cat": "Sanduíches"}, {"name": "Misto (pão, queijo e presunto)", "price": 8.0, "cat": "Sanduíches"}, {"name": "Pão com Ovo (pão e ovo)", "price": 5.0, "cat": "Sanduíches"}, {"name": "Pão na Chapa (pão com manteiga)", "price": 3.0, "cat": "Sanduíches"}, {"name": "Queijo Quente (pão e queijo)", "price": 6.0, "cat": "Sanduíches"}, {"name": "Misto com ovo (pão, queijo, presunto e ovo)", "price": 9.0, "cat": "Sanduíches"}, {"name": "Chocolate", "price": 2.0, "cat": "Bomboniere"}, {"name": "Pirulito Pop", "price": 2.0, "cat": "Bomboniere"}, {"name": "Jujuba", "price": 2.0, "cat": "Bomboniere"}, {"name": "Paçoquita", "price": 1.5, "cat": "Bomboniere"}, {"name": "Cocada", "price": 2.5, "cat": "Bomboniere"}, {"name": "Pastilha Halls", "price": 3.0, "cat": "Bomboniere"}, {"name": "Biscoito Recheado G", "price": 3.5, "cat": "Bomboniere"}, {"name": "Mentos", "price": 3.0, "cat": "Bomboniere"}, {"name": "Café Pequeno", "price": 2.0, "cat": "Bebidas"}, {"name": "Café Grande", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Pequeno", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Grande", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante 250ml", "price": 3.5, "cat": "Bebidas", "alias": "refri"}, {"name": "Refrigerante Lata", "price": 5.5, "cat": "Bebidas"}, {"name": "Refrigerante 600ml", "price": 6.0, "cat": "Bebidas"}, {"name": "Refrigerante 1L", "price": 8.0, "cat": "Bebidas"}, {"name": "Refrigerante 2L", "price": 13.0, "cat": "Bebidas"}, {"name": "Nescau", "price": 3.5, "cat": "Bebidas"}, {"name": "Tampico 300ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Água 500ml", "price": 2.5, "cat": "Bebidas"}, {"name": "Água com Gás", "price": 3.5, "cat": "Bebidas"}, {"name": "Energético", "price": 12.0, "cat": "Bebidas"}, {"name": "Vitamina de Manga", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Acerola", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Goiaba", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Cajá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Maracujá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Ameixa", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Morango", "price": 8.0, "cat": "Vitaminas"}, {"name": "Vitamina com Pó de Guaraná", "price": 8.0, "cat": "Vitaminas"}, {"name": "Açaí com Banana", "price": 10.0, "cat": "Vitaminas"}, {"name": "Copo de Suco 150ml", "price": 2.0, "cat": "Sucos"}, {"name": "Copo de Suco 300ml", "price": 3.0, "cat": "Sucos"}];
+const DEFAULT_PRODUCTS = [{"name": "Cuscuz com Manteiga", "price": 4.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo", "price": 5.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Presunto e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Cuscuz"}, {"name": "Tapioca Simples", "price": 3.0, "cat": "Tapiocas"}, {"name": "Tapioca com Presunto e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo", "price": 5.0, "cat": "Tapiocas"}, {"name": "Tapioca com Queijo", "price": 6.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Fatia de Bolo", "price": 4.0, "cat": "Diversos"}, {"name": "Hot Dog", "price": 7.0, "cat": "Diversos"}, {"name": "Salgados", "price": 5.0, "cat": "Diversos"}, {"name": "Porção de Guarnição", "price": 2.0, "cat": "Diversos"}, {"name": "Porção de Proteína", "price": 4.0, "cat": "Diversos"}, {"name": "Almoço Pequeno (1 guarnição)", "price": 13.0, "cat": "Almoço", "alias": "pratinho"}, {"name": "Almoço Grande (2 guarnições)", "price": 18.0, "cat": "Almoço"}, {"name": "Hambúrguer (pão, carne, alface e tomate)", "price": 10.0, "cat": "Sanduíches"}, {"name": "X-Burguer (pão, carne, queijo, alface e tomate)", "price": 11.0, "cat": "Sanduíches"}, {"name": "Bauru (pão, carne, queijo, ovo, alface e tomate)", "price": 12.0, "cat": "Sanduíches"}, {"name": "X-Tudo (pão, carne, queijo, presunto, ovo, alface e tomate)", "price": 15.0, "cat": "Sanduíches"}, {"name": "X-Egg (pão, ovo e queijo)", "price": 7.0, "cat": "Sanduíches"}, {"name": "Misto (pão, queijo e presunto)", "price": 8.0, "cat": "Sanduíches"}, {"name": "Pão com Ovo (pão e ovo)", "price": 5.0, "cat": "Sanduíches"}, {"name": "Pão na Chapa (pão com manteiga)", "price": 3.0, "cat": "Sanduíches"}, {"name": "Queijo Quente (pão e queijo)", "price": 6.0, "cat": "Sanduíches"}, {"name": "Misto com ovo (pão, queijo, presunto e ovo)", "price": 9.0, "cat": "Sanduíches"}, {"name": "Chocolate", "price": 2.0, "cat": "Bomboniere"}, {"name": "Pirulito Pop", "price": 2.0, "cat": "Bomboniere"}, {"name": "Jujuba", "price": 2.0, "cat": "Bomboniere"}, {"name": "Paçoquita", "price": 1.5, "cat": "Bomboniere"}, {"name": "Cocada", "price": 2.5, "cat": "Bomboniere"}, {"name": "Pastilha Halls", "price": 3.0, "cat": "Bomboniere"}, {"name": "Biscoito Recheado G", "price": 3.5, "cat": "Bomboniere"}, {"name": "Mentos", "price": 3.0, "cat": "Bomboniere"}, {"name": "Café Pequeno", "price": 2.0, "cat": "Bebidas"}, {"name": "Café Grande", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Pequeno", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Grande", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante 250ml", "price": 3.5, "cat": "Bebidas", "alias": "refri"}, {"name": "Refrigerante Lata", "price": 5.5, "cat": "Bebidas"}, {"name": "Refrigerante 600ml", "price": 6.0, "cat": "Bebidas"}, {"name": "Refrigerante 1L", "price": 8.0, "cat": "Bebidas"}, {"name": "Refrigerante 2L", "price": 13.0, "cat": "Bebidas"}, {"name": "Nescau", "price": 3.5, "cat": "Bebidas"}, {"name": "Tampico 300ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Água 500ml", "price": 2.5, "cat": "Bebidas"}, {"name": "Água com Gás", "price": 3.5, "cat": "Bebidas"}, {"name": "Energético", "price": 12.0, "cat": "Bebidas"}, {"name": "Vitamina de Manga", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Acerola", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Goiaba", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Cajá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Maracujá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Ameixa", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Morango", "price": 8.0, "cat": "Vitaminas"}, {"name": "Vitamina com Pó de Guaraná", "price": 8.0, "cat": "Vitaminas"}, {"name": "Açaí com Banana", "price": 10.0, "cat": "Vitaminas"}, {"name": "Vitamina de Açaí", "price": 8.0, "cat": "Vitaminas"}, {"name": "Copo de Suco 150ml", "price": 2.0, "cat": "Sucos"}, {"name": "Copo de Suco 300ml", "price": 3.0, "cat": "Sucos"}];
 function loadDefaultProducts(){
   if(!confirm(`Isso vai adicionar os ${DEFAULT_PRODUCTS.length} produtos padrão do cardápio da Dunnas (cuscuz, tapiocas, sanduíches, bebidas, vitaminas, sucos e almoço).\n\nSe algum produto já existir com o mesmo nome, o preço dele será atualizado pro valor padrão. Produtos que você já tem com outros nomes não são afetados. Clientes e fiados não são alterados.\n\nContinuar?`)) return;
   const { added, updated } = upsertProductsList(DEFAULT_PRODUCTS);
@@ -1995,11 +1997,11 @@ function renderProdutoChips(filter){
     const open = searching || expandedProdutoCats.has(cat);
     const catItems = byCat[cat];
     const selCount = catItems.reduce((s,p)=>s+(pedQtyMap[p.id]?1:0),0);
-    html += `<div class="product-cat-header${open?' open':''}" onclick="toggleProdutoCat('${escapeHtml(cat).replace(/'/g,"\\'")}')" onmousedown="event.preventDefault()" oncontextmenu="return false;" onselectstart="return false;">
+    html += `<button type="button" class="product-cat-header${open?' open':''}" onclick="toggleProdutoCat('${escapeHtml(cat).replace(/'/g,"\\'")}')">
       <span class="pch-icon">${icon}</span><span class="pch-label">${escapeHtml(cat)}</span>
       ${selCount?`<span class="pch-badge">${selCount}</span>`:''}
       <span class="pch-arrow">▾</span>
-    </div>`;
+    </button>`;
     if(open){
       sortProducts(catItems).forEach(p=>{
         const on = pedQtyMap[p.id] ? ' on' : '';
@@ -3022,6 +3024,59 @@ function voiceSetQty(idx, val){
   voiceParsed.items[idx].qty = q>0?q:1;
   renderVoiceArea();
 }
+let voiceEditingItemIndex = null;
+let voicePickerExpandedCats = new Set();
+function voiceOpenProductPicker(idx){
+  voiceEditingItemIndex = idx;
+  voicePickerExpandedCats = new Set();
+  openModal(voiceProductPickerHtml(''));
+}
+function voicePickerRowsHtml(filter){
+  const term = (filter||'').toLowerCase();
+  const filtered = DB.products.filter(p=>p.name.toLowerCase().includes(term) || (p.alias && p.alias.toLowerCase().includes(term)));
+  const byCat = {};
+  filtered.forEach(p=>{ (byCat[p.cat||'Outros']=byCat[p.cat||'Outros']||[]).push(p); });
+  const cats = CATEGORY_ORDER.filter(c=>byCat[c]).concat(Object.keys(byCat).filter(c=>!CATEGORY_ORDER.includes(c)));
+  const searching = !!term;
+  let rows = '';
+  cats.forEach(cat=>{
+    const icon = CATEGORY_ICONS[cat] || '🍴';
+    const open = searching || voicePickerExpandedCats.has(cat);
+    rows += `<button type="button" class="product-cat-header${open?' open':''}" onclick="toggleVoicePickerCat('${escapeHtml(cat).replace(/'/g,"\\'")}')">
+      <span class="pch-icon">${icon}</span><span class="pch-label">${escapeHtml(cat)}</span>
+      <span class="pch-arrow">▾</span>
+    </button>`;
+    if(open){
+      sortProducts(byCat[cat]).forEach(p=>{
+        rows += `<div class="product-pick-row" onclick="voicePickProduct('${p.id}')">
+          <div class="ppr-content">
+            <div class="ppr-name">${escapeHtml(p.name)}</div>
+            <div class="ppr-price">${brl(p.price)}</div>
+          </div>
+        </div>`;
+      });
+    }
+  });
+  return rows || '<div class="empty">Nenhum produto encontrado.</div>';
+}
+function voiceProductPickerHtml(filter){
+  return `<button class="modal-close" onclick="closeModal()">✕</button>
+    <h2>Escolher produto</h2>
+    <input class="search-box" id="voicePickerSearch" placeholder="Buscar produto..." oninput="document.getElementById('voicePickerList').innerHTML = voicePickerRowsHtml(this.value)" style="width:100%; margin-bottom:8px;">
+    <div id="voicePickerList">${voicePickerRowsHtml(filter)}</div>`;
+}
+function toggleVoicePickerCat(cat){
+  if(voicePickerExpandedCats.has(cat)) voicePickerExpandedCats.delete(cat);
+  else voicePickerExpandedCats.add(cat);
+  const list = document.getElementById('voicePickerList');
+  const search = document.getElementById('voicePickerSearch');
+  if(list) list.innerHTML = voicePickerRowsHtml(search?search.value:'');
+}
+function voicePickProduct(pid){
+  if(voiceEditingItemIndex==null || !voiceParsed) return;
+  voiceSetProduct(voiceEditingItemIndex, pid);
+  closeModal();
+}
 function voiceSetProduct(idx, id){
   if(!voiceParsed) return;
   const p = DB.products.find(x=>x.id===id);
@@ -3053,16 +3108,6 @@ function voiceConfirm(){
 function voiceReviewHtml(){
   const p = voiceParsed;
   const clientOptions = DB.clients.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<option value="${c.id}" ${c.id===p.clientId?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
-  const prodOptionsFor = (selId)=>{
-    const byCat = {};
-    DB.products.forEach(pr=>{ (byCat[pr.cat||'Outros']=byCat[pr.cat||'Outros']||[]).push(pr); });
-    const cats = CATEGORY_ORDER.filter(c=>byCat[c]).concat(Object.keys(byCat).filter(c=>!CATEGORY_ORDER.includes(c)));
-    return cats.map(cat=>{
-      const opts = byCat[cat].slice().sort((a,b)=>a.name.localeCompare(b.name))
-        .map(pr=>`<option value="${pr.id}" ${pr.id===selId?'selected':''}>${escapeHtml(pr.name)} — ${brl(pr.price)}</option>`).join('');
-      return `<optgroup label="${escapeHtml(cat)}">${opts}</optgroup>`;
-    }).join('');
-  };
   let html = `<div class="tag" style="margin:14px 0 6px;">Revisar antes de confirmar</div>
     <label>Cliente${p.clientId?'':(p.clientGuessName?` (achei "${escapeHtml(p.clientGuessName)}" mas com pouca confiança — confirme)`:' (não identificado — escolha manualmente)')}</label>
     <select id="voiceClientSel" onchange="voiceSetClient(this.value)">
@@ -3074,14 +3119,13 @@ function voiceReviewHtml(){
   p.items.forEach((it,idx)=>{
     html += `<div class="list-item" style="flex-wrap:wrap; gap:6px; border-top:1px solid rgba(255,255,255,.1); padding-top:8px; margin-top:8px;">
       <div style="display:flex; gap:6px; width:100%; align-items:center;">
-        <input type="number" min="1" value="${it.qty}" style="width:52px;" onchange="voiceSetQty(${idx}, this.value)">
-        <select style="flex:1;" onchange="voiceSetProduct(${idx}, this.value)">
-          <option value="">— não reconhecido: "${escapeHtml(it.guess)}" —</option>
-          ${prodOptionsFor(it.productId)}
-        </select>
-        <button class="btn-danger btn-small" style="width:auto;" onclick="voiceRemoveItem(${idx})">🗑️</button>
+        <input type="number" min="1" value="${it.qty}" style="width:52px; flex-shrink:0;" onchange="voiceSetQty(${idx}, this.value)">
+        <button type="button" class="btn-ghost" style="flex:1; margin:0; text-align:left; white-space:normal; line-height:1.3;" onclick="voiceOpenProductPicker(${idx})">
+          ${it.productId ? escapeHtml(it.name) : `❓ não reconhecido: "${escapeHtml(it.guess)}" — tocar pra escolher`}
+        </button>
+        <button class="btn-danger btn-small" style="width:auto; flex-shrink:0;" onclick="voiceRemoveItem(${idx})">🗑️</button>
       </div>
-      ${!it.productId?`<div style="font-size:.72rem; color:var(--rust); width:100%;">Não reconhecido com confiança — escolha o produto certo acima.</div>`:''}
+      ${it.productId?`<div style="font-size:.72rem; color:var(--paper-dim); width:100%;">${brl(it.price)} cada</div>`:`<div style="font-size:.72rem; color:var(--rust); width:100%;">Não reconhecido com confiança — toque acima pra escolher o produto certo.</div>`}
     </div>`;
   });
   const total = p.items.reduce((s,it)=>s + (it.price||0)*it.qty, 0);
@@ -3266,11 +3310,13 @@ function activityDetailBody(a){
 }
 function activityRowHtml(a){
   const hasDetail = !!a.meta;
+  const tag = hasDetail ? 'button' : 'div';
+  const typeAttr = hasDetail ? 'type="button"' : '';
   return `<div class="activity-item">
-    <div class="list-item act-row${hasDetail?' act-clickable':''}" ${hasDetail?`onclick="toggleActivityDetail('${a.id}')" onmousedown="event.preventDefault()" oncontextmenu="return false;" onselectstart="return false;"`:''}>
+    <${tag} class="list-item act-row${hasDetail?' act-clickable':''}" ${typeAttr} ${hasDetail?`onclick="toggleActivityDetail('${a.id}')"`:''}>
       <span>${a.icon||'•'} ${escapeHtml(a.text)}</span>
       <span class="meta" style="white-space:nowrap; display:flex; align-items:center; gap:6px;">${fmtDateTime(a.ts)}${hasDetail?`<span class="act-arrow" id="act-arrow-${a.id}">▾</span>`:''}</span>
-    </div>
+    </${tag}>
     ${hasDetail?`<div class="act-detail" id="act-detail-${a.id}" style="display:none;">${activityDetailBody(a)}</div>`:''}
   </div>`;
 }
