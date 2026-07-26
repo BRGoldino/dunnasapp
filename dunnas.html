@@ -188,6 +188,10 @@
   .product-cat-header .pch-badge{background:var(--mustard); color:var(--ink); font-size:.72rem; font-weight:700; border-radius:10px; padding:1px 7px; flex-shrink:0;}
   .product-cat-header .pch-arrow{margin-left:auto; flex-shrink:0; transition:transform .18s ease; opacity:.7;}
   .product-cat-header.open .pch-arrow{transform:rotate(180deg);}
+  .act-row.act-clickable{cursor:pointer; user-select:none;}
+  .act-row.act-clickable:active{background:rgba(255,255,255,.06);}
+  .act-arrow{transition:transform .18s ease; opacity:.7; font-size:.8rem;}
+  .act-detail{background:rgba(0,0,0,.18); border-radius:6px; padding:6px 10px; margin:-4px 0 8px;}
   .product-cat-header .pch-label{
     font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--olive);
     font-size:.85rem; border-bottom:2px solid var(--olive); padding-bottom:4px; flex:1; min-width:0;
@@ -780,6 +784,12 @@
       <button class="btn-danger" style="width:100%;" onclick="resetarEstatisticas()">📊 Resetar estatísticas</button>
     </div>
 
+    <div class="card">
+      <h2>Recuperação</h2>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Pra corrigir um erro rápido — como zerar a conta errada ou limpar o extrato sem ter mandado antes. Só guarda a última ação de cada tipo; fazendo outra do mesmo tipo, a anterior deixa de poder ser revertida.</p>
+      <div id="recuperacaoArea"></div>
+    </div>
+
     <div class="card" style="border:2px solid var(--rust);">
       <h2 style="color:var(--rust);">⚠️ Zona de risco</h2>
       <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Apaga TUDO: clientes, produtos, pedidos, ajustes e atividade. Volta o app pro estado de recém-instalado. Faça um backup antes se não tiver certeza.</p>
@@ -810,7 +820,7 @@
 
 <script>
 /* ---------- Estado & persistência ---------- */
-let DB = { products: [], clients: [], orders: [], activity: [], adjustments: [], statsResetAt: null };
+let DB = { products: [], clients: [], orders: [], activity: [], adjustments: [], statsResetAt: null, lastZerarConta: null, lastLimparExtrato: null };
 let calRef = new Date();
 let pedQtyMap = {}; // productId -> qty (para novo pedido)
 let expandedProdutoCats = new Set(); // categorias abertas na seleção de produtos do Fiado
@@ -833,6 +843,8 @@ async function loadAll(){
       DB.activity = parsed.activity || [];
       DB.adjustments = parsed.adjustments || [];
       DB.statsResetAt = parsed.statsResetAt || null;
+      DB.lastZerarConta = parsed.lastZerarConta || null;
+      DB.lastLimparExtrato = parsed.lastLimparExtrato || null;
     }
   }catch(e){
     console.error('Erro ao carregar dados salvos:', e);
@@ -849,8 +861,8 @@ function persist(){
     return false;
   }
 }
-function logActivity(text, icon){
-  DB.activity.unshift({ id:uid(), ts:new Date().toISOString(), text, icon: icon||'•' });
+function logActivity(text, icon, meta){
+  DB.activity.unshift({ id:uid(), ts:new Date().toISOString(), text, icon: icon||'•', meta: meta||null });
   if(DB.activity.length > 300) DB.activity.length = 300;
   persist();
 }
@@ -1194,6 +1206,7 @@ async function performStatementDownload(blobs, clientName){
     const suffix = blobs.length>1 ? `-parte${i+1}de${blobs.length}` : '';
     return `extrato-${safeName}${suffix}-${todayISO()}.png`;
   });
+  logActivity(`Extrato de ${clientName} baixado`, '⬇️');
   toast(blobs.length>1 ? `Extrato baixado em ${blobs.length} imagens (pra ficar legível)!` : 'Imagem baixada!');
 }
 async function performStatementShare(blobs, clientName){
@@ -1202,10 +1215,12 @@ async function performStatementShare(blobs, clientName){
   try{
     if(navigator.canShare && navigator.canShare({files})){
       await navigator.share({files, title:'Extrato de fiado', text:`Extrato de ${clientName} — Dunnas`});
+      logActivity(`Extrato de ${clientName} compartilhado`, '📤');
       return;
     }
   }catch(err){ /* usuário cancelou o compartilhamento, sem problema */ return; }
   await downloadBlobFilesSequential(blobs, i=>files[i].name);
+  logActivity(`Extrato de ${clientName} baixado`, '⬇️');
   toast('Compartilhamento direto não disponível nesse navegador — imagem(ns) baixada(s) pra enviar manualmente.');
 }
 async function openStatementExportPreview(id){
@@ -1330,7 +1345,7 @@ function onCatSelectChange(){
   document.getElementById('novoProdCatCustom').style.display = sel.value==='__custom__' ? 'block' : 'none';
 }
 
-const DEFAULT_PRODUCTS = [{"name": "Cuscuz com Manteiga", "price": 4.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo", "price": 5.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Presunto e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Cuscuz"}, {"name": "Tapioca Simples", "price": 3.0, "cat": "Tapiocas"}, {"name": "Tapioca com Presunto e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo", "price": 5.0, "cat": "Tapiocas"}, {"name": "Tapioca com Queijo", "price": 6.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Fatia de Bolo", "price": 4.0, "cat": "Diversos"}, {"name": "Hot Dog", "price": 7.0, "cat": "Diversos"}, {"name": "Salgados", "price": 5.0, "cat": "Diversos"}, {"name": "Porção de Guarnição", "price": 2.0, "cat": "Diversos"}, {"name": "Porção de Proteína", "price": 4.0, "cat": "Diversos"}, {"name": "Almoço Pequeno (1 guarnição)", "price": 13.0, "cat": "Almoço", "alias": "pratinho"}, {"name": "Almoço Grande (2 guarnições)", "price": 18.0, "cat": "Almoço"}, {"name": "Hambúrguer (pão, carne, alface e tomate)", "price": 10.0, "cat": "Sanduíches"}, {"name": "X-Burguer (pão, carne, queijo, alface e tomate)", "price": 11.0, "cat": "Sanduíches"}, {"name": "Bauru (pão, carne, queijo, ovo, alface e tomate)", "price": 12.0, "cat": "Sanduíches"}, {"name": "X-Tudo (pão, carne, queijo, presunto, ovo, alface e tomate)", "price": 15.0, "cat": "Sanduíches"}, {"name": "X-Egg (pão, ovo e queijo)", "price": 7.0, "cat": "Sanduíches"}, {"name": "Misto (pão, queijo e presunto)", "price": 8.0, "cat": "Sanduíches"}, {"name": "Pão com Ovo (pão e ovo)", "price": 5.0, "cat": "Sanduíches"}, {"name": "Pão na Chapa (pão com manteiga)", "price": 3.0, "cat": "Sanduíches"}, {"name": "Queijo Quente (pão e queijo)", "price": 6.0, "cat": "Sanduíches"}, {"name": "Chocolate", "price": 2.0, "cat": "Bomboniere"}, {"name": "Pirulito Pop", "price": 2.0, "cat": "Bomboniere"}, {"name": "Jujuba", "price": 2.0, "cat": "Bomboniere"}, {"name": "Paçoquita", "price": 1.5, "cat": "Bomboniere"}, {"name": "Cocada", "price": 2.5, "cat": "Bomboniere"}, {"name": "Pastilha Halls", "price": 3.0, "cat": "Bomboniere"}, {"name": "Biscoito Recheado G", "price": 3.5, "cat": "Bomboniere"}, {"name": "Café Pequeno", "price": 2.0, "cat": "Bebidas"}, {"name": "Café Grande", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Pequeno", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Grande", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante 250ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante Lata", "price": 5.5, "cat": "Bebidas"}, {"name": "Refrigerante 600ml", "price": 6.0, "cat": "Bebidas"}, {"name": "Refrigerante 1L", "price": 8.0, "cat": "Bebidas"}, {"name": "Refrigerante 2L", "price": 13.0, "cat": "Bebidas"}, {"name": "Nescau", "price": 3.5, "cat": "Bebidas"}, {"name": "Tampico 300ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Água 500ml", "price": 2.5, "cat": "Bebidas"}, {"name": "Água com Gás", "price": 3.5, "cat": "Bebidas"}, {"name": "Energético", "price": 12.0, "cat": "Bebidas"}, {"name": "Vitamina de Manga", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Acerola", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Goiaba", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Cajá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Maracujá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Ameixa", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Morango", "price": 8.0, "cat": "Vitaminas"}, {"name": "Vitamina com Pó de Guaraná", "price": 8.0, "cat": "Vitaminas"}, {"name": "Açaí com Banana", "price": 10.0, "cat": "Vitaminas"}, {"name": "Copo de Suco 150ml", "price": 2.0, "cat": "Sucos"}, {"name": "Copo de Suco 300ml", "price": 3.0, "cat": "Sucos"}];
+const DEFAULT_PRODUCTS = [{"name": "Cuscuz com Manteiga", "price": 4.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo", "price": 5.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Presunto e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Cuscuz"}, {"name": "Tapioca Simples", "price": 3.0, "cat": "Tapiocas"}, {"name": "Tapioca com Presunto e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo", "price": 5.0, "cat": "Tapiocas"}, {"name": "Tapioca com Queijo", "price": 6.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Fatia de Bolo", "price": 4.0, "cat": "Diversos"}, {"name": "Hot Dog", "price": 7.0, "cat": "Diversos"}, {"name": "Salgados", "price": 5.0, "cat": "Diversos"}, {"name": "Porção de Guarnição", "price": 2.0, "cat": "Diversos"}, {"name": "Porção de Proteína", "price": 4.0, "cat": "Diversos"}, {"name": "Almoço Pequeno (1 guarnição)", "price": 13.0, "cat": "Almoço", "alias": "pratinho"}, {"name": "Almoço Grande (2 guarnições)", "price": 18.0, "cat": "Almoço"}, {"name": "Hambúrguer (pão, carne, alface e tomate)", "price": 10.0, "cat": "Sanduíches"}, {"name": "X-Burguer (pão, carne, queijo, alface e tomate)", "price": 11.0, "cat": "Sanduíches"}, {"name": "Bauru (pão, carne, queijo, ovo, alface e tomate)", "price": 12.0, "cat": "Sanduíches"}, {"name": "X-Tudo (pão, carne, queijo, presunto, ovo, alface e tomate)", "price": 15.0, "cat": "Sanduíches"}, {"name": "X-Egg (pão, ovo e queijo)", "price": 7.0, "cat": "Sanduíches"}, {"name": "Misto (pão, queijo e presunto)", "price": 8.0, "cat": "Sanduíches"}, {"name": "Pão com Ovo (pão e ovo)", "price": 5.0, "cat": "Sanduíches"}, {"name": "Pão na Chapa (pão com manteiga)", "price": 3.0, "cat": "Sanduíches"}, {"name": "Queijo Quente (pão e queijo)", "price": 6.0, "cat": "Sanduíches"}, {"name": "Sanduíche de Presunto, Queijo e Ovo", "price": 9.0, "cat": "Sanduíches"}, {"name": "Chocolate", "price": 2.0, "cat": "Bomboniere"}, {"name": "Pirulito Pop", "price": 2.0, "cat": "Bomboniere"}, {"name": "Jujuba", "price": 2.0, "cat": "Bomboniere"}, {"name": "Paçoquita", "price": 1.5, "cat": "Bomboniere"}, {"name": "Cocada", "price": 2.5, "cat": "Bomboniere"}, {"name": "Pastilha Halls", "price": 3.0, "cat": "Bomboniere"}, {"name": "Biscoito Recheado G", "price": 3.5, "cat": "Bomboniere"}, {"name": "Café Pequeno", "price": 2.0, "cat": "Bebidas"}, {"name": "Café Grande", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Pequeno", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Grande", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante 250ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante Lata", "price": 5.5, "cat": "Bebidas"}, {"name": "Refrigerante 600ml", "price": 6.0, "cat": "Bebidas"}, {"name": "Refrigerante 1L", "price": 8.0, "cat": "Bebidas"}, {"name": "Refrigerante 2L", "price": 13.0, "cat": "Bebidas"}, {"name": "Nescau", "price": 3.5, "cat": "Bebidas"}, {"name": "Tampico 300ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Água 500ml", "price": 2.5, "cat": "Bebidas"}, {"name": "Água com Gás", "price": 3.5, "cat": "Bebidas"}, {"name": "Energético", "price": 12.0, "cat": "Bebidas"}, {"name": "Vitamina de Manga", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Acerola", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Goiaba", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Cajá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Maracujá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Ameixa", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Morango", "price": 8.0, "cat": "Vitaminas"}, {"name": "Vitamina com Pó de Guaraná", "price": 8.0, "cat": "Vitaminas"}, {"name": "Açaí com Banana", "price": 10.0, "cat": "Vitaminas"}, {"name": "Copo de Suco 150ml", "price": 2.0, "cat": "Sucos"}, {"name": "Copo de Suco 300ml", "price": 3.0, "cat": "Sucos"}];
 function loadDefaultProducts(){
   if(!confirm(`Isso vai adicionar os ${DEFAULT_PRODUCTS.length} produtos padrão do cardápio da Dunnas (cuscuz, tapiocas, sanduíches, bebidas, vitaminas, sucos e almoço).\n\nSe algum produto já existir com o mesmo nome, o preço dele será atualizado pro valor padrão. Produtos que você já tem com outros nomes não são afetados. Clientes e fiados não são alterados.\n\nContinuar?`)) return;
   const { added, updated } = upsertProductsList(DEFAULT_PRODUCTS);
@@ -1640,8 +1655,9 @@ function abrirCliente(id){
         </div>`;
       });
       const temAberto = o.items.some(it=>!it.paid);
-      body += `<div style="display:flex; gap:6px; margin-top:6px;">
+      body += `<div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
         ${temAberto?`<button class="btn-main btn-small" style="width:auto; margin:0;" onclick="quitarPedidoInteiro('${o.id}')">✅ Quitar tudo desse dia</button>`:''}
+        <button class="btn-ghost btn-small" style="width:auto;" onclick="alterarDataPedido('${o.id}')">📅 Alterar data</button>
         <button class="btn-danger btn-small" onclick="removerPedido('${o.id}')">Excluir pedido inteiro</button>
       </div></div>`;
     });
@@ -1662,7 +1678,7 @@ async function addAdjustment(clientId){
   persist();
   const cli = DB.clients.find(x=>x.id===clientId);
   const newTotal = clientDebt(clientId);
-  logActivity(`${type==='debit'?'Valor adicionado à conta':'Pagamento recebido'} de ${cli?cli.name:'cliente'}: ${brl(amount)}${note?' — '+note:''}`, type==='debit'?'➕':'➖');
+  logActivity(`${type==='debit'?'Valor adicionado à conta':'Pagamento recebido'} de ${cli?cli.name:'cliente'}: ${brl(amount)}${note?' — '+note:''}`, type==='debit'?'➕':'➖', {note, oldTotal, newTotal});
   const label = type==='debit' ? `+ ${brl(amount)} adicionado à conta` : `− ${brl(amount)} de pagamento recebido`;
   showAccountChangeAnim(cli?cli.name:'Cliente', oldTotal, newTotal, label, type==='debit');
   abrirCliente(clientId);
@@ -1705,7 +1721,7 @@ async function quitarPedidoInteiro(orderId){
     const ok = persist();
     if(!ok){ toast('Erro ao salvar!'); return; }
     const newTotal = clientDebt(clientId);
-    logActivity(`Dia inteiro quitado: ${fmtDate(o.date)} de ${cli?cli.name:'cliente'} (${brl(totalDoDia)})`, '✅');
+    logActivity(`Dia inteiro quitado: ${fmtDate(o.date)} de ${cli?cli.name:'cliente'} (${brl(totalDoDia)})`, '✅', {items:itensAbertos.map(it=>({name:it.name, qty:it.qty, price:it.price})), oldTotal, newTotal});
     showAccountChangeAnim(cli?cli.name:'Cliente', oldTotal, newTotal, `− ${brl(totalDoDia)} (dia ${fmtDate(o.date)} quitado)`, false);
     abrirCliente(clientId);
     renderClientesLista();
@@ -1723,17 +1739,26 @@ async function zerarContaCliente(clientId){
     if(oldTotal<=0){ toast('Essa conta já está zerada'); return; }
     if(!confirm(`Marcar TODA a conta de ${cli.name} como paga?\n\nValor atual: ${brl(oldTotal)}\n\nIsso vai quitar todos os produtos em aberto e neutralizar qualquer valor pendente de ajuste manual. O histórico não é apagado, só marcado como pago.`)) return;
     if(!confirm(`Confirma mesmo? ${cli.name} pagou os ${brl(oldTotal)} que devia?`)) return;
+    const changedItems = [];
     DB.orders.filter(o=>o.clientId===clientId).forEach(o=>{
-      o.items.forEach(it=>{ it.paid = true; it.paidDate = todayISO(); });
+      o.items.forEach(it=>{
+        if(!it.paid){
+          changedItems.push({orderId:o.id, itemId:it.id, prevPaidDate:it.paidDate||null});
+          it.paid = true; it.paidDate = todayISO();
+        }
+      });
     });
     const restante = clientDebt(clientId);
+    let adjustmentId = null;
     if(restante > 0.004){
-      DB.adjustments.push({ id:uid(), clientId, type:'credit', amount:restante, note:'Quitação total da conta', date:todayISO() });
+      adjustmentId = uid();
+      DB.adjustments.push({ id:adjustmentId, clientId, type:'credit', amount:restante, note:'Quitação total da conta', date:todayISO() });
     }
+    const newTotal = clientDebt(clientId);
+    DB.lastZerarConta = { clientId, clientName: cli.name, ts:new Date().toISOString(), changedItems, adjustmentId, oldTotal, newTotal };
     const ok = persist();
     if(!ok){ toast('Erro ao salvar!'); return; }
-    const newTotal = clientDebt(clientId);
-    logActivity(`Conta zerada: ${cli.name} (${brl(oldTotal)})`, '💰');
+    logActivity(`Conta zerada: ${cli.name} (${brl(oldTotal)})`, '💰', {oldTotal, newTotal});
     showAccountChangeAnim(cli.name, oldTotal, newTotal, `− ${brl(oldTotal)} (conta zerada)`, false);
     abrirCliente(clientId);
     renderClientesLista();
@@ -1743,12 +1768,37 @@ async function zerarContaCliente(clientId){
     toast('Erro inesperado — veja o console');
   }
 }
+async function reverterUltimoZerarConta(){
+  const snap = DB.lastZerarConta;
+  if(!snap){ toast('Não há nenhuma conta zerada recentemente pra reverter'); return; }
+  if(!confirm(`Reverter a última conta zerada, de ${snap.clientName}?\n\nA conta volta a ter ${brl(snap.oldTotal)} em aberto, como estava antes.`)) return;
+  snap.changedItems.forEach(ci=>{
+    const o = DB.orders.find(x=>x.id===ci.orderId);
+    if(!o) return;
+    const it = o.items.find(x=>x.id===ci.itemId);
+    if(!it) return;
+    it.paid = false; it.paidDate = ci.prevPaidDate;
+  });
+  if(snap.adjustmentId){
+    DB.adjustments = DB.adjustments.filter(a=>a.id!==snap.adjustmentId);
+  }
+  DB.lastZerarConta = null;
+  const ok = persist();
+  if(!ok){ toast('Erro ao salvar!'); return; }
+  logActivity(`Zerar conta revertido: ${snap.clientName} (${brl(snap.oldTotal)} restaurado)`, '↩️');
+  toast('Conta restaurada ao estado anterior!');
+  renderConfig();
+  renderClientesLista();
+  renderInicio();
+}
 async function limparHistoricoCliente(clientId){
   try{
     const cli = DB.clients.find(x=>x.id===clientId);
     if(!cli){ toast('Cliente não encontrado'); return; }
-    const ordersCount = DB.orders.filter(o=>o.clientId===clientId && !o.archived).length;
-    const adjCount = DB.adjustments.filter(a=>a.clientId===clientId && !a.archived).length;
+    const ordersToArchive = DB.orders.filter(o=>o.clientId===clientId && !o.archived);
+    const adjsToArchive = DB.adjustments.filter(a=>a.clientId===clientId && !a.archived);
+    const ordersCount = ordersToArchive.length;
+    const adjCount = adjsToArchive.length;
     if(!ordersCount && !adjCount){ toast('Não tem extrato pra limpar'); return; }
     const debt = clientDebt(clientId);
     if(debt > 0.004){
@@ -1756,8 +1806,11 @@ async function limparHistoricoCliente(clientId){
       return;
     }
     if(!confirm(`Limpar o extrato de ${cli.name} da ficha dele? O cliente continua cadastrado. Isso não afeta o Calendário nem as Estatísticas — esses registros continuam contando pro negócio, só somem da conta individual dele.`)) return;
-    DB.orders.forEach(o=>{ if(o.clientId===clientId) o.archived = true; });
-    DB.adjustments.forEach(a=>{ if(a.clientId===clientId) a.archived = true; });
+    const orderIds = ordersToArchive.map(o=>o.id);
+    const adjIds = adjsToArchive.map(a=>a.id);
+    ordersToArchive.forEach(o=>{ o.archived = true; });
+    adjsToArchive.forEach(a=>{ a.archived = true; });
+    DB.lastLimparExtrato = { clientId, clientName: cli.name, ts:new Date().toISOString(), orderIds, adjIds };
     const ok = persist();
     if(!ok){ toast('Erro ao salvar!'); return; }
     logActivity(`Extrato limpo da ficha: ${cli.name} (${ordersCount} pedido(s), ${adjCount} ajuste(s))`, '🧹');
@@ -1768,6 +1821,20 @@ async function limparHistoricoCliente(clientId){
     console.error('Erro ao limpar histórico:', err);
     toast('Erro inesperado — veja o console');
   }
+}
+async function restaurarUltimoExtrato(){
+  const snap = DB.lastLimparExtrato;
+  if(!snap){ toast('Não há nenhum extrato limpo recentemente pra restaurar'); return; }
+  if(!confirm(`Restaurar o extrato de ${snap.clientName} como estava antes de limpar?`)) return;
+  DB.orders.forEach(o=>{ if(snap.orderIds.includes(o.id)) o.archived = false; });
+  DB.adjustments.forEach(a=>{ if(snap.adjIds.includes(a.id)) a.archived = false; });
+  DB.lastLimparExtrato = null;
+  const ok = persist();
+  if(!ok){ toast('Erro ao salvar!'); return; }
+  logActivity(`Extrato restaurado: ${snap.clientName}`, '↩️');
+  toast('Extrato restaurado!');
+  renderConfig();
+  renderClientesLista();
 }
 async function toggleItemPago(orderId, itemId){
   const o = DB.orders.find(x=>x.id===orderId);
@@ -1781,13 +1848,38 @@ async function toggleItemPago(orderId, itemId){
   await saveOrders();
   const cli = DB.clients.find(x=>x.id===clientId);
   const newTotal = clientDebt(clientId);
-  logActivity(`${it.paid?'Quitado':'Reaberto'}: ${it.qty}x ${it.name} de ${cli?cli.name:'cliente'}`, it.paid?'✅':'↩️');
+  logActivity(`${it.paid?'Quitado':'Reaberto'}: ${it.qty}x ${it.name} de ${cli?cli.name:'cliente'}`, it.paid?'✅':'↩️', {items:[{name:it.name, qty:it.qty, price:it.price}], oldTotal, newTotal});
   const itemTotal = it.price*it.qty;
   const label = it.paid ? `− ${brl(itemTotal)} (${it.name} quitado)` : `+ ${brl(itemTotal)} (${it.name} reaberto)`;
   showAccountChangeAnim(cli?cli.name:'Cliente', oldTotal, newTotal, label, !it.paid);
   abrirCliente(clientId);
   renderClientesLista();
   renderInicio();
+}
+async function alterarDataPedido(orderId){
+  try{
+    const o = DB.orders.find(x=>x.id===orderId);
+    if(!o){ toast('Pedido não encontrado — pode ser cache antigo, tente reinstalar o app'); return; }
+    const novaData = prompt('Nova data do pedido (AAAA-MM-DD):', o.date);
+    if(novaData === null) return;
+    const val = novaData.trim();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(val)){ toast('Data inválida — use o formato AAAA-MM-DD'); return; }
+    const dataAntiga = o.date;
+    if(dataAntiga === val){ toast('Já é essa a data'); return; }
+    const clientId = o.clientId;
+    const cli = DB.clients.find(x=>x.id===clientId);
+    o.date = val;
+    const ok = persist();
+    if(!ok){ toast('Erro ao salvar!'); return; }
+    logActivity(`Data de pedido de ${cli?cli.name:'cliente'} alterada: ${fmtDate(dataAntiga)} → ${fmtDate(val)}`, '📅');
+    toast('Data do pedido atualizada');
+    if(clientId) abrirCliente(clientId);
+    renderCalendario();
+    renderInicio();
+  }catch(err){
+    console.error('Erro ao alterar data do pedido:', err);
+    toast('Erro inesperado — veja o console');
+  }
 }
 async function removerPedido(orderId){
   try{
@@ -1799,7 +1891,7 @@ async function removerPedido(orderId){
     DB.orders = DB.orders.filter(x=>x.id!==orderId);
     const ok = persist();
     if(!ok){ toast('Erro ao salvar a exclusão!'); return; }
-    logActivity(`Pedido de ${cli?cli.name:'cliente'} do dia ${fmtDate(o.date)} foi excluído`, '🗑️');
+    logActivity(`Pedido de ${cli?cli.name:'cliente'} do dia ${fmtDate(o.date)} foi excluído`, '🗑️', {items:o.items.map(it=>({name:it.name, qty:it.qty, price:it.price}))});
     toast('Pedido excluído');
     if(clientId) abrirCliente(clientId);
     renderClientesLista();
@@ -2019,7 +2111,7 @@ async function commitFiado(clientId, date, items){
   const cli = DB.clients.find(x=>x.id===clientId);
   const totalPed = items.reduce((s,it)=>s+it.price*it.qty,0);
   const newTotal = clientDebt(clientId);
-  logActivity(`${cli?cli.name:'Cliente'} pediu ${items.length} ite${items.length>1?'ns':'m'} (${brl(totalPed)}) em ${fmtDate(date)}`, '📝');
+  logActivity(`${cli?cli.name:'Cliente'} pediu ${items.length} ite${items.length>1?'ns':'m'} (${brl(totalPed)}) em ${fmtDate(date)}`, '📝', {items, oldTotal, newTotal});
   showFiadoConfirm(cli?cli.name:'Cliente', oldTotal, newTotal, totalPed);
   pedQtyMap = {};
   renderPedidoForm();
@@ -2277,6 +2369,7 @@ async function performCardapioDownload(blobs){
     const suffix = blobs.length>1 ? `-parte${i+1}de${blobs.length}` : '';
     return `dunnas-cardapio${suffix}-${todayISO()}.png`;
   });
+  logActivity('Cardápio baixado', '⬇️');
   toast(blobs.length>1 ? `Cardápio baixado em ${blobs.length} imagens (pra ficar legível)!` : 'Imagem do cardápio baixada!');
 }
 async function performCardapioShare(blobs){
@@ -2284,10 +2377,12 @@ async function performCardapioShare(blobs){
   try{
     if(navigator.canShare && navigator.canShare({files})){
       await navigator.share({files, title:'Cardápio Dunnas', text:'Confira nosso cardápio!'});
+      logActivity('Cardápio compartilhado', '📤');
       return;
     }
   }catch(err){ /* usuário cancelou o compartilhamento, sem problema */ return; }
   await downloadBlobFilesSequential(blobs, i=>files[i].name);
+  logActivity('Cardápio baixado', '⬇️');
   toast('Compartilhamento direto não disponível nesse navegador — imagem(ns) baixada(s) pra enviar manualmente.');
 }
 async function openCardapioExportPreview(){
@@ -2661,6 +2756,7 @@ function toggleDiscordEditMode(){
 }
 function setDiscordEnabled(val){
   localStorage.setItem(DISCORD_ENABLED_KEY, val ? '1' : '0');
+  logActivity(val ? 'Envio automático pro Discord ativado' : 'Envio automático pro Discord desligado', val?'🔔':'🔕');
   toast(val ? 'Envio pro Discord ativado' : 'Envio pro Discord desligado');
   renderConfig();
 }
@@ -2714,6 +2810,19 @@ function setFontScale(scale){
   renderConfig();
 }
 function renderConfig(){
+  const recArea = document.getElementById('recuperacaoArea');
+  if(recArea){
+    const z = DB.lastZerarConta;
+    const l = DB.lastLimparExtrato;
+    let html = '';
+    html += z
+      ? `<button class="btn-ghost" style="width:100%; margin-bottom:8px;" onclick="reverterUltimoZerarConta()">↩️ Reverter zerar conta de ${escapeHtml(z.clientName)} (${brl(z.oldTotal)})</button>`
+      : `<button class="btn-ghost" style="width:100%; margin-bottom:8px; opacity:.5;" disabled>↩️ Nenhuma conta zerada recentemente</button>`;
+    html += l
+      ? `<button class="btn-ghost" style="width:100%;" onclick="restaurarUltimoExtrato()">↩️ Restaurar extrato de ${escapeHtml(l.clientName)} antes da limpeza</button>`
+      : `<button class="btn-ghost" style="width:100%; opacity:.5;" disabled>↩️ Nenhum extrato limpo recentemente</button>`;
+    recArea.innerHTML = html;
+  }
   const saved = parseFloat(localStorage.getItem(FONT_SCALE_KEY) || '1');
   document.querySelectorAll('#fontSizeOptions .chip').forEach(chip=>{
     chip.classList.toggle('on', parseFloat(chip.dataset.scale)===saved);
@@ -2836,10 +2945,30 @@ function fmtDateTime(isoTs){
   const mi = String(d.getMinutes()).padStart(2,'0');
   return `${dd}/${mm} ${hh}:${mi}`;
 }
+function activityDetailBody(a){
+  const m = a.meta;
+  if(!m) return '';
+  let html = '';
+  if(m.items && m.items.length){
+    html += m.items.map(it=>`<div class="list-item" style="padding:3px 0;"><span>${it.qty}x ${escapeHtml(it.name)}</span><span class="money">${brl(it.price*it.qty)}</span></div>`).join('');
+  }
+  if(m.note){
+    html += `<div class="list-item" style="padding:3px 0;"><span>Observação</span><span>${escapeHtml(m.note)}</span></div>`;
+  }
+  if(typeof m.oldTotal === 'number' && typeof m.newTotal === 'number'){
+    html += `<div class="list-item" style="padding:3px 0; border-top:1px solid rgba(255,255,255,.12); margin-top:4px;"><span>Dívida antes</span><span class="money">${brl(m.oldTotal)}</span></div>
+      <div class="list-item" style="padding:3px 0;"><span>Nova dívida</span><span class="money owe">${brl(m.newTotal)}</span></div>`;
+  }
+  return html || '<div class="empty" style="padding:4px 0;">Sem detalhes adicionais.</div>';
+}
 function activityRowHtml(a){
-  return `<div class="list-item">
-    <span>${a.icon||'•'} ${escapeHtml(a.text)}</span>
-    <span class="meta" style="white-space:nowrap;">${fmtDateTime(a.ts)}</span>
+  const hasDetail = !!a.meta;
+  return `<div class="activity-item">
+    <div class="list-item act-row${hasDetail?' act-clickable':''}" ${hasDetail?`onclick="toggleActivityDetail('${a.id}')"`:''}>
+      <span>${a.icon||'•'} ${escapeHtml(a.text)}</span>
+      <span class="meta" style="white-space:nowrap; display:flex; align-items:center; gap:6px;">${fmtDateTime(a.ts)}${hasDetail?`<span class="act-arrow" id="act-arrow-${a.id}">▾</span>`:''}</span>
+    </div>
+    ${hasDetail?`<div class="act-detail" id="act-detail-${a.id}" style="display:none;">${activityDetailBody(a)}</div>`:''}
   </div>`;
 }
 function renderAtividadePreview(){
@@ -2854,6 +2983,14 @@ function renderAtividade(filter){
   let items = DB.activity;
   if(filter) items = items.filter(a=>a.text.toLowerCase().includes(filter.toLowerCase()));
   box.innerHTML = items.length ? items.map(activityRowHtml).join('') : '<div class="empty">Nenhuma atividade encontrada.</div>';
+}
+function toggleActivityDetail(id){
+  const detail = document.getElementById('act-detail-'+id);
+  const arrow = document.getElementById('act-arrow-'+id);
+  if(!detail) return;
+  const open = detail.style.display !== 'none';
+  detail.style.display = open ? 'none' : 'block';
+  if(arrow) arrow.style.transform = open ? '' : 'rotate(180deg)';
 }
 
 /* ---------- Init ---------- */
