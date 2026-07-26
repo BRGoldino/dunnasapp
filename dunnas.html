@@ -1793,9 +1793,19 @@ async function limparHistoricoCliente(clientId){
       return;
     }
     if(!confirm(`Limpar o extrato de ${cli.name} da ficha dele? O cliente continua cadastrado. Isso não afeta o Calendário nem as Estatísticas — esses registros continuam contando pro negócio, só somem da conta individual dele.`)) return;
-    // snapshot exato de como estava ANTES, pra permitir restaurar de vez (descartando qualquer coisa feita depois)
-    const ordersSnapshot = JSON.parse(JSON.stringify(DB.orders.filter(o=>o.clientId===clientId)));
-    const adjustmentsSnapshot = JSON.parse(JSON.stringify(DB.adjustments.filter(a=>a.clientId===clientId)));
+    // Se a conta desse cliente foi zerada bem antes desse limpar (ainda reversível), usamos o estado de
+    // ANTES de zerar como base — assim, restaurar o extrato depois também desfaz a quitação e o ajuste
+    // da "zerar conta", em vez de trazer tudo de volta já marcado como pago.
+    let ordersSnapshot, adjustmentsSnapshot;
+    const z = DB.lastZerarConta;
+    if(z && z.clientId === clientId){
+      ordersSnapshot = z.ordersSnapshot;
+      adjustmentsSnapshot = z.adjustmentsSnapshot;
+      DB.lastZerarConta = null; // absorvido: reverter fica só pelo "restaurar extrato" a partir daqui
+    } else {
+      ordersSnapshot = JSON.parse(JSON.stringify(DB.orders.filter(o=>o.clientId===clientId)));
+      adjustmentsSnapshot = JSON.parse(JSON.stringify(DB.adjustments.filter(a=>a.clientId===clientId)));
+    }
     ordersToArchive.forEach(o=>{ o.archived = true; });
     adjsToArchive.forEach(a=>{ a.archived = true; });
     DB.lastLimparExtrato = { clientId, clientName: cli.name, ts:new Date().toISOString(), ordersSnapshot, adjustmentsSnapshot };
