@@ -687,6 +687,15 @@
       <h2>Notas de atualização</h2>
       <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mais recente:</p>
       <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0 0 12px;">
+        <li><strong>Pedido por voz (experimental):</strong> nova área em Configurações → "Área de testes" — fala o pedido (ex: "Fulana pediu 2 misto com ovo e um mentos ontem") e o app tenta reconhecer cliente, produtos e até a data, sempre com tela de revisão antes de confirmar</li>
+        <li>Reconhecimento por voz/aproximação entende "pratinho" como Almoço Pequeno, "refri" como Refrigerante 250ml, e "misto" sozinho como sanduíche — mas como tapioca ou cuscuz mista se a pessoa mencionar isso, com ou sem ovo</li>
+        <li>Corrigido: gaveta de categoria de produtos (Fiado) e gaveta de detalhes da Atividade não abrem mais seleção de texto/menu "Pesquisar no Google" ao tocar em celular — o toque agora é sempre reconhecido, independente de quantos itens o pedido tinha</li>
+        <li>Ficha do cliente: novo botão "Alterar data" em cada pedido registrado, com calendário nativo — corrige pedido lançado no dia errado sem precisar excluir e recriar</li>
+        <li>Configurações → Recuperação: "reverter último zerar conta" e "restaurar último extrato" voltam a conta do cliente exatamente pro estado de antes daquela ação — mesmo que tenha rodado outro fiado, pagamento ou ajuste depois por engano</li>
+        <li>Atividade: itens de fiado, quitação, dia quitado, exclusão de pedido e ajuste manual agora expandem (gaveta) mostrando os itens, a dívida antes e a nova dívida; mais ações passaram a ser registradas (ativar/desligar webhook do Discord, baixar/compartilhar extrato e cardápio)</li>
+        <li>Seleção de produtos no Fiado virou gaveta por categoria — todas sempre visíveis, expande ao tocar, e fecha automaticamente sempre que você volta pra aba</li>
+        <li>Novos produtos padrão: "Energético" (R$ 12,00, Bebidas), "Misto com ovo" (R$ 9,00, Sanduíches) e "Mentos" (R$ 3,00, Bomboniere)</li>
+        <li>Novo cliente padrão: "Hudson"</li>
         <li>Cardápio e Extrato: quando a imagem é dividida em várias partes, o indicador "Parte X/Y" virou um selo no canto superior direito em vez de texto colado no título — o nome do cliente/cardápio não desloca mais pra esquerda. Também deixamos "Extrato gerado em..." e "Total em aberto" com cinza mais escuro e legível (antes estavam apagados demais)</li>
         <li>Baixar várias imagens do Cardápio/Extrato agora acontece uma de cada vez, com pequeno intervalo e barra de progresso — evita o navegador bloquear/pedir permissão por causa de vários downloads simultâneos</li>
         <li>Configurações do extrato ganharam controle manual da divisão de imagens (automática, manual com nº de linhas por imagem, ou forçar imagem única) — útil pra corrigir na mão se a divisão automática sair errada</li>
@@ -794,7 +803,7 @@
 
     <div class="card">
       <h2>🎙️ Área de testes — Pedido por voz</h2>
-      <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Experimental. Fale algo como "Fulana pediu 2 misto com ovo e um mentos" e o app tenta reconhecer o cliente e os produtos, aproximando nomes falados errado (ex: "duiche" → sanduíche). Sempre revisa antes de confirmar.</p>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Experimental. Fale algo como "Fulana pediu 2 misto com ovo e um mentos ontem" e o app tenta reconhecer o cliente, os produtos (aproximando erro de fala, ex: "duiche" → sanduíche) e a data ("hoje", "ontem", "dia 20", nome do dia da semana). Sempre revisa antes de confirmar.</p>
       <div id="voiceArea"></div>
     </div>
 
@@ -1354,7 +1363,7 @@ function onCatSelectChange(){
   document.getElementById('novoProdCatCustom').style.display = sel.value==='__custom__' ? 'block' : 'none';
 }
 
-const DEFAULT_PRODUCTS = [{"name": "Cuscuz com Manteiga", "price": 4.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo", "price": 5.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Presunto e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Cuscuz"}, {"name": "Tapioca Simples", "price": 3.0, "cat": "Tapiocas"}, {"name": "Tapioca com Presunto e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo", "price": 5.0, "cat": "Tapiocas"}, {"name": "Tapioca com Queijo", "price": 6.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Fatia de Bolo", "price": 4.0, "cat": "Diversos"}, {"name": "Hot Dog", "price": 7.0, "cat": "Diversos"}, {"name": "Salgados", "price": 5.0, "cat": "Diversos"}, {"name": "Porção de Guarnição", "price": 2.0, "cat": "Diversos"}, {"name": "Porção de Proteína", "price": 4.0, "cat": "Diversos"}, {"name": "Almoço Pequeno (1 guarnição)", "price": 13.0, "cat": "Almoço", "alias": "pratinho"}, {"name": "Almoço Grande (2 guarnições)", "price": 18.0, "cat": "Almoço"}, {"name": "Hambúrguer (pão, carne, alface e tomate)", "price": 10.0, "cat": "Sanduíches"}, {"name": "X-Burguer (pão, carne, queijo, alface e tomate)", "price": 11.0, "cat": "Sanduíches"}, {"name": "Bauru (pão, carne, queijo, ovo, alface e tomate)", "price": 12.0, "cat": "Sanduíches"}, {"name": "X-Tudo (pão, carne, queijo, presunto, ovo, alface e tomate)", "price": 15.0, "cat": "Sanduíches"}, {"name": "X-Egg (pão, ovo e queijo)", "price": 7.0, "cat": "Sanduíches"}, {"name": "Misto (pão, queijo e presunto)", "price": 8.0, "cat": "Sanduíches"}, {"name": "Pão com Ovo (pão e ovo)", "price": 5.0, "cat": "Sanduíches"}, {"name": "Pão na Chapa (pão com manteiga)", "price": 3.0, "cat": "Sanduíches"}, {"name": "Queijo Quente (pão e queijo)", "price": 6.0, "cat": "Sanduíches"}, {"name": "Misto com ovo (pão, queijo, presunto e ovo)", "price": 9.0, "cat": "Sanduíches"}, {"name": "Chocolate", "price": 2.0, "cat": "Bomboniere"}, {"name": "Pirulito Pop", "price": 2.0, "cat": "Bomboniere"}, {"name": "Jujuba", "price": 2.0, "cat": "Bomboniere"}, {"name": "Paçoquita", "price": 1.5, "cat": "Bomboniere"}, {"name": "Cocada", "price": 2.5, "cat": "Bomboniere"}, {"name": "Pastilha Halls", "price": 3.0, "cat": "Bomboniere"}, {"name": "Biscoito Recheado G", "price": 3.5, "cat": "Bomboniere"}, {"name": "Mentos", "price": 3.0, "cat": "Bomboniere"}, {"name": "Café Pequeno", "price": 2.0, "cat": "Bebidas"}, {"name": "Café Grande", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Pequeno", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Grande", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante 250ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante Lata", "price": 5.5, "cat": "Bebidas"}, {"name": "Refrigerante 600ml", "price": 6.0, "cat": "Bebidas"}, {"name": "Refrigerante 1L", "price": 8.0, "cat": "Bebidas"}, {"name": "Refrigerante 2L", "price": 13.0, "cat": "Bebidas"}, {"name": "Nescau", "price": 3.5, "cat": "Bebidas"}, {"name": "Tampico 300ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Água 500ml", "price": 2.5, "cat": "Bebidas"}, {"name": "Água com Gás", "price": 3.5, "cat": "Bebidas"}, {"name": "Energético", "price": 12.0, "cat": "Bebidas"}, {"name": "Vitamina de Manga", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Acerola", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Goiaba", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Cajá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Maracujá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Ameixa", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Morango", "price": 8.0, "cat": "Vitaminas"}, {"name": "Vitamina com Pó de Guaraná", "price": 8.0, "cat": "Vitaminas"}, {"name": "Açaí com Banana", "price": 10.0, "cat": "Vitaminas"}, {"name": "Copo de Suco 150ml", "price": 2.0, "cat": "Sucos"}, {"name": "Copo de Suco 300ml", "price": 3.0, "cat": "Sucos"}];
+const DEFAULT_PRODUCTS = [{"name": "Cuscuz com Manteiga", "price": 4.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo", "price": 5.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Presunto e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Cuscuz"}, {"name": "Tapioca Simples", "price": 3.0, "cat": "Tapiocas"}, {"name": "Tapioca com Presunto e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo", "price": 5.0, "cat": "Tapiocas"}, {"name": "Tapioca com Queijo", "price": 6.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Fatia de Bolo", "price": 4.0, "cat": "Diversos"}, {"name": "Hot Dog", "price": 7.0, "cat": "Diversos"}, {"name": "Salgados", "price": 5.0, "cat": "Diversos"}, {"name": "Porção de Guarnição", "price": 2.0, "cat": "Diversos"}, {"name": "Porção de Proteína", "price": 4.0, "cat": "Diversos"}, {"name": "Vitamina de Açaí", "price": 8.0, "cat": "Diversos"}, {"name": "Almoço Pequeno (1 guarnição)", "price": 13.0, "cat": "Almoço", "alias": "pratinho"}, {"name": "Almoço Grande (2 guarnições)", "price": 18.0, "cat": "Almoço"}, {"name": "Hambúrguer (pão, carne, alface e tomate)", "price": 10.0, "cat": "Sanduíches"}, {"name": "X-Burguer (pão, carne, queijo, alface e tomate)", "price": 11.0, "cat": "Sanduíches"}, {"name": "Bauru (pão, carne, queijo, ovo, alface e tomate)", "price": 12.0, "cat": "Sanduíches"}, {"name": "X-Tudo (pão, carne, queijo, presunto, ovo, alface e tomate)", "price": 15.0, "cat": "Sanduíches"}, {"name": "X-Egg (pão, ovo e queijo)", "price": 7.0, "cat": "Sanduíches"}, {"name": "Misto (pão, queijo e presunto)", "price": 8.0, "cat": "Sanduíches"}, {"name": "Pão com Ovo (pão e ovo)", "price": 5.0, "cat": "Sanduíches"}, {"name": "Pão na Chapa (pão com manteiga)", "price": 3.0, "cat": "Sanduíches"}, {"name": "Queijo Quente (pão e queijo)", "price": 6.0, "cat": "Sanduíches"}, {"name": "Misto com ovo (pão, queijo, presunto e ovo)", "price": 9.0, "cat": "Sanduíches"}, {"name": "Chocolate", "price": 2.0, "cat": "Bomboniere"}, {"name": "Pirulito Pop", "price": 2.0, "cat": "Bomboniere"}, {"name": "Jujuba", "price": 2.0, "cat": "Bomboniere"}, {"name": "Paçoquita", "price": 1.5, "cat": "Bomboniere"}, {"name": "Cocada", "price": 2.5, "cat": "Bomboniere"}, {"name": "Pastilha Halls", "price": 3.0, "cat": "Bomboniere"}, {"name": "Biscoito Recheado G", "price": 3.5, "cat": "Bomboniere"}, {"name": "Mentos", "price": 3.0, "cat": "Bomboniere"}, {"name": "Café Pequeno", "price": 2.0, "cat": "Bebidas"}, {"name": "Café Grande", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Pequeno", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Grande", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante 250ml", "price": 3.5, "cat": "Bebidas", "alias": "refri"}, {"name": "Refrigerante Lata", "price": 5.5, "cat": "Bebidas"}, {"name": "Refrigerante 600ml", "price": 6.0, "cat": "Bebidas"}, {"name": "Refrigerante 1L", "price": 8.0, "cat": "Bebidas"}, {"name": "Refrigerante 2L", "price": 13.0, "cat": "Bebidas"}, {"name": "Nescau", "price": 3.5, "cat": "Bebidas"}, {"name": "Tampico 300ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Água 500ml", "price": 2.5, "cat": "Bebidas"}, {"name": "Água com Gás", "price": 3.5, "cat": "Bebidas"}, {"name": "Energético", "price": 12.0, "cat": "Bebidas"}, {"name": "Vitamina de Manga", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Acerola", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Goiaba", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Cajá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Maracujá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Ameixa", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Morango", "price": 8.0, "cat": "Vitaminas"}, {"name": "Vitamina com Pó de Guaraná", "price": 8.0, "cat": "Vitaminas"}, {"name": "Açaí com Banana", "price": 10.0, "cat": "Vitaminas"}, {"name": "Copo de Suco 150ml", "price": 2.0, "cat": "Sucos"}, {"name": "Copo de Suco 300ml", "price": 3.0, "cat": "Sucos"}];
 function loadDefaultProducts(){
   if(!confirm(`Isso vai adicionar os ${DEFAULT_PRODUCTS.length} produtos padrão do cardápio da Dunnas (cuscuz, tapiocas, sanduíches, bebidas, vitaminas, sucos e almoço).\n\nSe algum produto já existir com o mesmo nome, o preço dele será atualizado pro valor padrão. Produtos que você já tem com outros nomes não são afetados. Clientes e fiados não são alterados.\n\nContinuar?`)) return;
   const { added, updated } = upsertProductsList(DEFAULT_PRODUCTS);
@@ -1363,7 +1372,7 @@ function loadDefaultProducts(){
   renderProdutosLista();
 }
 
-const DEFAULT_CLIENTS = ["Alexandre", "Alexsandro (Alê)", "Anízia", "Arcádia", "Bianca", "Camila", "Carol", "Cássia", "César", "Gabriela", "Geovana", "Gleison", "Gustavo", "Halison", "Honorato", "Jardel", "Jenifer", "João Victor", "Letícia", "Lorena", "Lívia", "Manuel", "Marcelo", "Meire", "Mirela", "Mônica", "Natália", "Nilson", "Raquel", "Ricardo", "Sandra", "Sarah", "Seu Edilson", "Vanessa", "Victor", "Wedson", "Wilker Lima", "Wilkie Mendes", "Ítalo"];
+const DEFAULT_CLIENTS = ["Alexandre", "Alexsandro (Alê)", "Anízia", "Arcádia", "Bianca", "Camila", "Carol", "Cássia", "César", "Gabriela", "Geovana", "Gleison", "Gustavo", "Halison", "Honorato", "Hudson", "Jardel", "Jenifer", "João Victor", "Letícia", "Lorena", "Lívia", "Manuel", "Marcelo", "Meire", "Mirela", "Mônica", "Natália", "Nilson", "Raquel", "Ricardo", "Sandra", "Sarah", "Seu Edilson", "Vanessa", "Victor", "Wedson", "Wilker Lima", "Wilkie Mendes", "Ítalo"];
 function loadDefaultClients(){
   if(!confirm(`Isso vai cadastrar os ${DEFAULT_CLIENTS.length} clientes da sua lista, todos com conta zerada.\n\nQuem já existir com o mesmo nome é ignorado (não duplica, não mexe na dívida de quem já tem). Produtos e pedidos não são afetados.\n\nContinuar?`)) return;
   const existentes = new Set(DB.clients.map(c=>c.name.trim().toLowerCase()));
@@ -1986,7 +1995,7 @@ function renderProdutoChips(filter){
     const open = searching || expandedProdutoCats.has(cat);
     const catItems = byCat[cat];
     const selCount = catItems.reduce((s,p)=>s+(pedQtyMap[p.id]?1:0),0);
-    html += `<div class="product-cat-header${open?' open':''}" onclick="toggleProdutoCat('${escapeHtml(cat).replace(/'/g,"\\'")}')">
+    html += `<div class="product-cat-header${open?' open':''}" onclick="toggleProdutoCat('${escapeHtml(cat).replace(/'/g,"\\'")}')" onmousedown="event.preventDefault()" oncontextmenu="return false;" onselectstart="return false;">
       <span class="pch-icon">${icon}</span><span class="pch-label">${escapeHtml(cat)}</span>
       ${selCount?`<span class="pch-badge">${selCount}</span>`:''}
       <span class="pch-arrow">▾</span>
@@ -2876,23 +2885,83 @@ function bestProductMatch(phrase){
   const pWords = phrase.split(' ').filter(w=>w.length>3);
   let best = null;
   DB.products.forEach(p=>{
-    const nName = normalizeStr(p.name);
-    const scoreFull = similarity(nName, phrase);
-    const nameWords = nName.split(/[^a-z0-9]+/).filter(w=>w.length>3);
-    let scoreWords = 0;
-    pWords.forEach(pw=>{
-      nameWords.forEach(nw=>{
-        const s = similarity(pw, nw);
-        if(s>scoreWords) scoreWords = s;
+    const candidates = [normalizeStr(p.name)];
+    if(p.alias) candidates.push(normalizeStr(p.alias));
+    candidates.forEach(nName=>{
+      const scoreFull = similarity(nName, phrase);
+      const nameWords = nName.split(/[^a-z0-9]+/).filter(w=>w.length>3);
+      let scoreWords = 0;
+      pWords.forEach(pw=>{
+        nameWords.forEach(nw=>{
+          const s = similarity(pw, nw);
+          if(s>scoreWords) scoreWords = s;
+        });
       });
+      const score = Math.max(scoreFull, scoreWords*0.85);
+      if(!best || score>best.score) best = {id:p.id, name:p.name, price:p.price, score};
     });
-    const score = Math.max(scoreFull, scoreWords*0.85);
-    if(!best || score>best.score) best = {id:p.id, name:p.name, price:p.price, score};
   });
   return best;
 }
+function resolveMistoSpecialCase(phrase){
+  if(!/\bmist[oa]\b/.test(phrase)) return null;
+  const hasOvo = /\bovo\b/.test(phrase);
+  let targetName;
+  if(/\btapioca\b/.test(phrase)){
+    targetName = hasOvo ? 'Tapioca com Ovo, Presunto e Queijo' : 'Tapioca com Presunto e Queijo';
+  } else if(/\bcuscuz\b/.test(phrase)){
+    targetName = hasOvo ? 'Cuscuz com Ovo, Presunto e Queijo' : 'Cuscuz com Presunto e Queijo';
+  } else {
+    targetName = hasOvo ? 'Misto com ovo (pão, queijo, presunto e ovo)' : 'Misto (pão, queijo e presunto)';
+  }
+  const norm = normalizeStr(targetName);
+  return DB.products.find(x=>normalizeStr(x.name)===norm) || null;
+}
+const VOICE_WEEKDAYS = ['domingo','segunda','terca','quarta','quinta','sexta','sabado'];
+function isoAddDays(baseIso, delta){
+  const [y,m,d] = baseIso.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  dt.setDate(dt.getDate()+delta);
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+function extractVoiceDate(norm){
+  const today = todayISO();
+  let m;
+  if(/\bhoje\b/.test(norm)) return { date: today, cleaned: norm.replace(/\bhoje\b/,'').trim() };
+  if(/\banteontem\b/.test(norm)) return { date: isoAddDays(today,-2), cleaned: norm.replace(/\banteontem\b/,'').trim() };
+  if(/\bontem\b/.test(norm)) return { date: isoAddDays(today,-1), cleaned: norm.replace(/\bontem\b/,'').trim() };
+  // dia DD/MM ou DD-MM (com ou sem ano)
+  m = norm.match(/\bdia\s+(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/) || norm.match(/\b(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})\b/);
+  if(m){
+    const dd = parseInt(m[1],10), mm = parseInt(m[2],10);
+    let yyyy = m[3] ? parseInt(m[3],10) : new Date().getFullYear();
+    if(yyyy<100) yyyy += 2000;
+    const iso = yyyy+'-'+String(mm).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
+    return { date: iso, cleaned: norm.replace(m[0],'').trim() };
+  }
+  // dia DD (assume mês/ano atual)
+  m = norm.match(/\bdia\s+(\d{1,2})\b/);
+  if(m){
+    const now = new Date();
+    const dd = parseInt(m[1],10);
+    const iso = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
+    return { date: iso, cleaned: norm.replace(m[0],'').trim() };
+  }
+  // nome do dia da semana (assume a ocorrência mais recente, incluindo hoje)
+  for(let i=0;i<VOICE_WEEKDAYS.length;i++){
+    const re = new RegExp('\\b'+VOICE_WEEKDAYS[i]+'(feira)?\\b');
+    if(re.test(norm)){
+      const now = new Date();
+      const diff = (now.getDay() - i + 7) % 7;
+      return { date: isoAddDays(today, -diff), cleaned: norm.replace(re,'').trim() };
+    }
+  }
+  return { date: today, cleaned: norm };
+}
 function parseVoiceOrder(rawText){
-  const norm = normalizeStr(rawText);
+  const normFull = normalizeStr(rawText);
+  const { date, cleaned } = extractVoiceDate(normFull);
+  const norm = cleaned.replace(/\bno\b|\bem\b|\bpara\b/g,' ').replace(/\s+/g,' ').trim();
   const words = norm.split(' ').filter(Boolean);
   const clientMatch = bestClientMatch(words);
   const itemWords = words.slice();
@@ -2903,6 +2972,8 @@ function parseVoiceOrder(rawText){
     const {qty, rest} = extractQty(chunk);
     const cleanRest = rest.replace(/^(de |o |a |os |as |um |uma )+/,'').trim();
     if(!cleanRest) return null;
+    const special = resolveMistoSpecialCase(cleanRest);
+    if(special) return { productId:special.id, name:special.name, price:special.price, qty:qty||1, score:1, guess:cleanRest };
     const match = bestProductMatch(cleanRest);
     const ok = match && match.score>=0.55;
     return { productId: ok?match.id:null, name: ok?match.name:cleanRest, price: ok?match.price:0, qty: qty||1, score: match?match.score:0, guess: cleanRest };
@@ -2910,6 +2981,7 @@ function parseVoiceOrder(rawText){
   return {
     clientId: clientMatch && clientMatch.score>=0.5 ? clientMatch.id : null,
     clientGuessName: clientMatch ? clientMatch.name : null,
+    date,
     items
   };
 }
@@ -2943,6 +3015,7 @@ function processVoiceTranscript(){
   renderVoiceArea();
 }
 function voiceSetClient(id){ if(!voiceParsed) return; voiceParsed.clientId = id || null; }
+function voiceSetDate(val){ if(!voiceParsed) return; voiceParsed.date = val || todayISO(); }
 function voiceSetQty(idx, val){
   if(!voiceParsed) return;
   const q = parseInt(val,10);
@@ -2971,21 +3044,33 @@ function voiceConfirm(){
   if(voiceParsed.items.some(it=>!it.productId)){ toast('Escolha o produto certo pra cada item antes de confirmar'); return; }
   const items = voiceParsed.items.map(it=>({ id:uid(), productId:it.productId, name:it.name, price:it.price, qty:it.qty, paid:false }));
   const clientId = voiceParsed.clientId;
+  const date = voiceParsed.date || todayISO();
   voiceParsed = null;
   voiceTranscriptText = '';
-  commitFiado(clientId, todayISO(), items);
+  commitFiado(clientId, date, items);
   renderVoiceArea();
 }
 function voiceReviewHtml(){
   const p = voiceParsed;
   const clientOptions = DB.clients.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<option value="${c.id}" ${c.id===p.clientId?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
-  const prodOptionsFor = (selId)=> sortProducts(DB.products.slice()).map(pr=>`<option value="${pr.id}" ${pr.id===selId?'selected':''}>${escapeHtml(pr.name)} — ${brl(pr.price)}</option>`).join('');
+  const prodOptionsFor = (selId)=>{
+    const byCat = {};
+    DB.products.forEach(pr=>{ (byCat[pr.cat||'Outros']=byCat[pr.cat||'Outros']||[]).push(pr); });
+    const cats = CATEGORY_ORDER.filter(c=>byCat[c]).concat(Object.keys(byCat).filter(c=>!CATEGORY_ORDER.includes(c)));
+    return cats.map(cat=>{
+      const opts = byCat[cat].slice().sort((a,b)=>a.name.localeCompare(b.name))
+        .map(pr=>`<option value="${pr.id}" ${pr.id===selId?'selected':''}>${escapeHtml(pr.name)} — ${brl(pr.price)}</option>`).join('');
+      return `<optgroup label="${escapeHtml(cat)}">${opts}</optgroup>`;
+    }).join('');
+  };
   let html = `<div class="tag" style="margin:14px 0 6px;">Revisar antes de confirmar</div>
     <label>Cliente${p.clientId?'':(p.clientGuessName?` (achei "${escapeHtml(p.clientGuessName)}" mas com pouca confiança — confirme)`:' (não identificado — escolha manualmente)')}</label>
     <select id="voiceClientSel" onchange="voiceSetClient(this.value)">
       <option value="">— selecione —</option>
       ${clientOptions}
-    </select>`;
+    </select>
+    <label style="margin-top:8px;">Data do pedido</label>
+    <input type="date" id="voiceDateInput" value="${p.date}" onchange="voiceSetDate(this.value)">`;
   p.items.forEach((it,idx)=>{
     html += `<div class="list-item" style="flex-wrap:wrap; gap:6px; border-top:1px solid rgba(255,255,255,.1); padding-top:8px; margin-top:8px;">
       <div style="display:flex; gap:6px; width:100%; align-items:center;">
@@ -3021,8 +3106,8 @@ function renderVoiceArea(){
     html += `<p style="font-size:.75rem; color:var(--paper-dim);">Seu navegador não tem reconhecimento de voz nativo — mas dá pra digitar a frase abaixo e testar o reconhecimento de cliente/produtos mesmo assim.</p>`;
   }
   html += `<label>Transcrição (edite se precisar)</label>
-    <textarea id="voiceTranscript" rows="2" placeholder="ex: fulana pediu 2 misto com ovo e um mentos" style="width:100%;" oninput="voiceTranscriptText=this.value">${escapeHtml(voiceTranscriptText||'')}</textarea>
-    <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="processVoiceTranscript()">🔎 Reconhecer cliente e produtos</button>`;
+    <textarea id="voiceTranscript" rows="2" placeholder="ex: fulana pediu 2 misto com ovo e um mentos ontem" style="width:100%;" oninput="voiceTranscriptText=this.value">${escapeHtml(voiceTranscriptText||'')}</textarea>
+    <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="processVoiceTranscript()">🔎 Reconhecer cliente, produtos e data</button>`;
   if(voiceParsed) html += voiceReviewHtml();
   box.innerHTML = html;
 }
@@ -3182,7 +3267,7 @@ function activityDetailBody(a){
 function activityRowHtml(a){
   const hasDetail = !!a.meta;
   return `<div class="activity-item">
-    <div class="list-item act-row${hasDetail?' act-clickable':''}" ${hasDetail?`onclick="toggleActivityDetail('${a.id}')"`:''}>
+    <div class="list-item act-row${hasDetail?' act-clickable':''}" ${hasDetail?`onclick="toggleActivityDetail('${a.id}')" onmousedown="event.preventDefault()" oncontextmenu="return false;" onselectstart="return false;"`:''}>
       <span>${a.icon||'•'} ${escapeHtml(a.text)}</span>
       <span class="meta" style="white-space:nowrap; display:flex; align-items:center; gap:6px;">${fmtDateTime(a.ts)}${hasDetail?`<span class="act-arrow" id="act-arrow-${a.id}">▾</span>`:''}</span>
     </div>
