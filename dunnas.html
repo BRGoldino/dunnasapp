@@ -182,16 +182,18 @@
   }
   .chip.on{background:var(--mustard); color:var(--ink); border-color:var(--mustard); font-weight:700;}
 
-  .product-cat-header{display:flex; align-items:center; gap:8px; margin:18px 0 8px; width:100%; flex-basis:100%; cursor:pointer; user-select:none; padding:4px 2px; border-radius:6px;}
+  .product-cat-header{display:flex; align-items:center; gap:8px; margin:18px 0 8px; width:100%; flex-basis:100%; cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent; padding:4px 2px; border-radius:6px;}
+  .product-cat-header *{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
   .product-cat-header:active{background:rgba(255,255,255,.06);}
   .product-cat-header .pch-icon{font-size:1.3rem; flex-shrink:0;}
   .product-cat-header .pch-badge{background:var(--mustard); color:var(--ink); font-size:.72rem; font-weight:700; border-radius:10px; padding:1px 7px; flex-shrink:0;}
   .product-cat-header .pch-arrow{margin-left:auto; flex-shrink:0; transition:transform .18s ease; opacity:.7;}
   .product-cat-header.open .pch-arrow{transform:rotate(180deg);}
-  .act-row.act-clickable{cursor:pointer; user-select:none;}
+  .act-row.act-clickable{cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation; -webkit-tap-highlight-color:transparent;}
+  .act-row.act-clickable *{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
   .act-row.act-clickable:active{background:rgba(255,255,255,.06);}
   .act-arrow{transition:transform .18s ease; opacity:.7; font-size:.8rem;}
-  .act-detail{background:rgba(0,0,0,.18); border-radius:6px; padding:6px 10px; margin:-4px 0 8px;}
+  .act-detail{background:rgba(0,0,0,.18); border-radius:6px; padding:6px 10px; margin:-4px 0 8px; -webkit-user-select:text; user-select:text;}
   .product-cat-header .pch-label{
     font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--olive);
     font-size:.85rem; border-bottom:2px solid var(--olive); padding-bottom:4px; flex:1; min-width:0;
@@ -790,6 +792,12 @@
       <div id="recuperacaoArea"></div>
     </div>
 
+    <div class="card">
+      <h2>🎙️ Área de testes — Pedido por voz</h2>
+      <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Experimental. Fale algo como "Fulana pediu 2 misto com ovo e um mentos" e o app tenta reconhecer o cliente e os produtos, aproximando nomes falados errado (ex: "duiche" → sanduíche). Sempre revisa antes de confirmar.</p>
+      <div id="voiceArea"></div>
+    </div>
+
     <div class="card" style="border:2px solid var(--rust);">
       <h2 style="color:var(--rust);">⚠️ Zona de risco</h2>
       <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Apaga TUDO: clientes, produtos, pedidos, ajustes e atividade. Volta o app pro estado de recém-instalado. Faça um backup antes se não tiver certeza.</p>
@@ -824,6 +832,7 @@ let DB = { products: [], clients: [], orders: [], activity: [], adjustments: [],
 let calRef = new Date();
 let pedQtyMap = {}; // productId -> qty (para novo pedido)
 let expandedProdutoCats = new Set(); // categorias abertas na seleção de produtos do Fiado
+let voiceRecognition = null, voiceListening = false, voiceTranscriptText = '', voiceParsed = null;
 let pendingFiado = null; // {clientId, date, items} enquanto aguarda confirmação
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -1345,7 +1354,7 @@ function onCatSelectChange(){
   document.getElementById('novoProdCatCustom').style.display = sel.value==='__custom__' ? 'block' : 'none';
 }
 
-const DEFAULT_PRODUCTS = [{"name": "Cuscuz com Manteiga", "price": 4.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo", "price": 5.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Presunto e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Cuscuz"}, {"name": "Tapioca Simples", "price": 3.0, "cat": "Tapiocas"}, {"name": "Tapioca com Presunto e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo", "price": 5.0, "cat": "Tapiocas"}, {"name": "Tapioca com Queijo", "price": 6.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Fatia de Bolo", "price": 4.0, "cat": "Diversos"}, {"name": "Hot Dog", "price": 7.0, "cat": "Diversos"}, {"name": "Salgados", "price": 5.0, "cat": "Diversos"}, {"name": "Porção de Guarnição", "price": 2.0, "cat": "Diversos"}, {"name": "Porção de Proteína", "price": 4.0, "cat": "Diversos"}, {"name": "Almoço Pequeno (1 guarnição)", "price": 13.0, "cat": "Almoço", "alias": "pratinho"}, {"name": "Almoço Grande (2 guarnições)", "price": 18.0, "cat": "Almoço"}, {"name": "Hambúrguer (pão, carne, alface e tomate)", "price": 10.0, "cat": "Sanduíches"}, {"name": "X-Burguer (pão, carne, queijo, alface e tomate)", "price": 11.0, "cat": "Sanduíches"}, {"name": "Bauru (pão, carne, queijo, ovo, alface e tomate)", "price": 12.0, "cat": "Sanduíches"}, {"name": "X-Tudo (pão, carne, queijo, presunto, ovo, alface e tomate)", "price": 15.0, "cat": "Sanduíches"}, {"name": "X-Egg (pão, ovo e queijo)", "price": 7.0, "cat": "Sanduíches"}, {"name": "Misto (pão, queijo e presunto)", "price": 8.0, "cat": "Sanduíches"}, {"name": "Pão com Ovo (pão e ovo)", "price": 5.0, "cat": "Sanduíches"}, {"name": "Pão na Chapa (pão com manteiga)", "price": 3.0, "cat": "Sanduíches"}, {"name": "Queijo Quente (pão e queijo)", "price": 6.0, "cat": "Sanduíches"}, {"name": "Misto com ovo (pão, queijo, presunto e ovo)", "price": 9.0, "cat": "Sanduíches"}, {"name": "Chocolate", "price": 2.0, "cat": "Bomboniere"}, {"name": "Pirulito Pop", "price": 2.0, "cat": "Bomboniere"}, {"name": "Jujuba", "price": 2.0, "cat": "Bomboniere"}, {"name": "Paçoquita", "price": 1.5, "cat": "Bomboniere"}, {"name": "Cocada", "price": 2.5, "cat": "Bomboniere"}, {"name": "Pastilha Halls", "price": 3.0, "cat": "Bomboniere"}, {"name": "Biscoito Recheado G", "price": 3.5, "cat": "Bomboniere"}, {"name": "Café Pequeno", "price": 2.0, "cat": "Bebidas"}, {"name": "Café Grande", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Pequeno", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Grande", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante 250ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante Lata", "price": 5.5, "cat": "Bebidas"}, {"name": "Refrigerante 600ml", "price": 6.0, "cat": "Bebidas"}, {"name": "Refrigerante 1L", "price": 8.0, "cat": "Bebidas"}, {"name": "Refrigerante 2L", "price": 13.0, "cat": "Bebidas"}, {"name": "Nescau", "price": 3.5, "cat": "Bebidas"}, {"name": "Tampico 300ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Água 500ml", "price": 2.5, "cat": "Bebidas"}, {"name": "Água com Gás", "price": 3.5, "cat": "Bebidas"}, {"name": "Energético", "price": 12.0, "cat": "Bebidas"}, {"name": "Vitamina de Manga", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Acerola", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Goiaba", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Cajá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Maracujá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Ameixa", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Morango", "price": 8.0, "cat": "Vitaminas"}, {"name": "Vitamina com Pó de Guaraná", "price": 8.0, "cat": "Vitaminas"}, {"name": "Açaí com Banana", "price": 10.0, "cat": "Vitaminas"}, {"name": "Copo de Suco 150ml", "price": 2.0, "cat": "Sucos"}, {"name": "Copo de Suco 300ml", "price": 3.0, "cat": "Sucos"}];
+const DEFAULT_PRODUCTS = [{"name": "Cuscuz com Manteiga", "price": 4.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo", "price": 5.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Presunto e Queijo", "price": 7.0, "cat": "Cuscuz"}, {"name": "Cuscuz com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Cuscuz"}, {"name": "Tapioca Simples", "price": 3.0, "cat": "Tapiocas"}, {"name": "Tapioca com Presunto e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo", "price": 5.0, "cat": "Tapiocas"}, {"name": "Tapioca com Queijo", "price": 6.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo, Presunto e Queijo", "price": 8.0, "cat": "Tapiocas"}, {"name": "Tapioca com Ovo e Queijo", "price": 7.0, "cat": "Tapiocas"}, {"name": "Fatia de Bolo", "price": 4.0, "cat": "Diversos"}, {"name": "Hot Dog", "price": 7.0, "cat": "Diversos"}, {"name": "Salgados", "price": 5.0, "cat": "Diversos"}, {"name": "Porção de Guarnição", "price": 2.0, "cat": "Diversos"}, {"name": "Porção de Proteína", "price": 4.0, "cat": "Diversos"}, {"name": "Almoço Pequeno (1 guarnição)", "price": 13.0, "cat": "Almoço", "alias": "pratinho"}, {"name": "Almoço Grande (2 guarnições)", "price": 18.0, "cat": "Almoço"}, {"name": "Hambúrguer (pão, carne, alface e tomate)", "price": 10.0, "cat": "Sanduíches"}, {"name": "X-Burguer (pão, carne, queijo, alface e tomate)", "price": 11.0, "cat": "Sanduíches"}, {"name": "Bauru (pão, carne, queijo, ovo, alface e tomate)", "price": 12.0, "cat": "Sanduíches"}, {"name": "X-Tudo (pão, carne, queijo, presunto, ovo, alface e tomate)", "price": 15.0, "cat": "Sanduíches"}, {"name": "X-Egg (pão, ovo e queijo)", "price": 7.0, "cat": "Sanduíches"}, {"name": "Misto (pão, queijo e presunto)", "price": 8.0, "cat": "Sanduíches"}, {"name": "Pão com Ovo (pão e ovo)", "price": 5.0, "cat": "Sanduíches"}, {"name": "Pão na Chapa (pão com manteiga)", "price": 3.0, "cat": "Sanduíches"}, {"name": "Queijo Quente (pão e queijo)", "price": 6.0, "cat": "Sanduíches"}, {"name": "Misto com ovo (pão, queijo, presunto e ovo)", "price": 9.0, "cat": "Sanduíches"}, {"name": "Chocolate", "price": 2.0, "cat": "Bomboniere"}, {"name": "Pirulito Pop", "price": 2.0, "cat": "Bomboniere"}, {"name": "Jujuba", "price": 2.0, "cat": "Bomboniere"}, {"name": "Paçoquita", "price": 1.5, "cat": "Bomboniere"}, {"name": "Cocada", "price": 2.5, "cat": "Bomboniere"}, {"name": "Pastilha Halls", "price": 3.0, "cat": "Bomboniere"}, {"name": "Biscoito Recheado G", "price": 3.5, "cat": "Bomboniere"}, {"name": "Mentos", "price": 3.0, "cat": "Bomboniere"}, {"name": "Café Pequeno", "price": 2.0, "cat": "Bebidas"}, {"name": "Café Grande", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Pequeno", "price": 3.0, "cat": "Bebidas"}, {"name": "Café com Leite Grande", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante 250ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Refrigerante Lata", "price": 5.5, "cat": "Bebidas"}, {"name": "Refrigerante 600ml", "price": 6.0, "cat": "Bebidas"}, {"name": "Refrigerante 1L", "price": 8.0, "cat": "Bebidas"}, {"name": "Refrigerante 2L", "price": 13.0, "cat": "Bebidas"}, {"name": "Nescau", "price": 3.5, "cat": "Bebidas"}, {"name": "Tampico 300ml", "price": 3.5, "cat": "Bebidas"}, {"name": "Água 500ml", "price": 2.5, "cat": "Bebidas"}, {"name": "Água com Gás", "price": 3.5, "cat": "Bebidas"}, {"name": "Energético", "price": 12.0, "cat": "Bebidas"}, {"name": "Vitamina de Manga", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Acerola", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Goiaba", "price": 6.0, "cat": "Vitaminas"}, {"name": "Vitamina de Cajá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Maracujá", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Ameixa", "price": 7.0, "cat": "Vitaminas"}, {"name": "Vitamina de Morango", "price": 8.0, "cat": "Vitaminas"}, {"name": "Vitamina com Pó de Guaraná", "price": 8.0, "cat": "Vitaminas"}, {"name": "Açaí com Banana", "price": 10.0, "cat": "Vitaminas"}, {"name": "Copo de Suco 150ml", "price": 2.0, "cat": "Sucos"}, {"name": "Copo de Suco 300ml", "price": 3.0, "cat": "Sucos"}];
 function loadDefaultProducts(){
   if(!confirm(`Isso vai adicionar os ${DEFAULT_PRODUCTS.length} produtos padrão do cardápio da Dunnas (cuscuz, tapiocas, sanduíches, bebidas, vitaminas, sucos e almoço).\n\nSe algum produto já existir com o mesmo nome, o preço dele será atualizado pro valor padrão. Produtos que você já tem com outros nomes não são afetados. Clientes e fiados não são alterados.\n\nContinuar?`)) return;
   const { added, updated } = upsertProductsList(DEFAULT_PRODUCTS);
@@ -2817,6 +2826,206 @@ function setFontScale(scale){
   localStorage.setItem(FONT_SCALE_KEY, String(scale));
   renderConfig();
 }
+/* ---------- Pedido por voz (área de testes) ---------- */
+function normalizeStr(s){
+  return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+}
+function levenshtein(a,b){
+  const m=a.length, n=b.length;
+  if(!m) return n; if(!n) return m;
+  const dp = [];
+  for(let i=0;i<=m;i++){ dp.push([i]); }
+  for(let j=1;j<=n;j++){ dp[0][j]=j; }
+  for(let i=1;i<=m;i++){
+    for(let j=1;j<=n;j++){
+      dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1+Math.min(dp[i-1][j-1],dp[i-1][j],dp[i][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+function similarity(a,b){
+  a=a||''; b=b||'';
+  if(!a.length && !b.length) return 1;
+  if(!a.length || !b.length) return 0;
+  return 1 - levenshtein(a,b)/Math.max(a.length,b.length);
+}
+const VOICE_NUMBER_WORDS = {um:1,uma:1,dois:2,duas:2,tres:3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10,onze:11,doze:12,uma_duzia:12};
+function extractQty(chunk){
+  const words = chunk.split(' ').filter(Boolean);
+  if(!words.length) return {qty:1, rest:''};
+  const first = words[0];
+  if(/^\d+$/.test(first)) return {qty:parseInt(first,10), rest: words.slice(1).join(' ')};
+  if(VOICE_NUMBER_WORDS[first]) return {qty:VOICE_NUMBER_WORDS[first], rest: words.slice(1).join(' ')};
+  return {qty:1, rest: chunk};
+}
+function bestClientMatch(words){
+  let best = null;
+  const maxStart = Math.min(words.length-1, 2);
+  for(let start=0; start<=maxStart; start++){
+    for(let len=1; len<=4 && start+len<=words.length; len++){
+      const phrase = words.slice(start,start+len).join(' ');
+      DB.clients.forEach(cli=>{
+        const score = similarity(normalizeStr(cli.name), phrase);
+        if(!best || score>best.score) best = {id:cli.id, name:cli.name, score, start, len};
+      });
+    }
+  }
+  return best;
+}
+function bestProductMatch(phrase){
+  const pWords = phrase.split(' ').filter(w=>w.length>3);
+  let best = null;
+  DB.products.forEach(p=>{
+    const nName = normalizeStr(p.name);
+    const scoreFull = similarity(nName, phrase);
+    const nameWords = nName.split(/[^a-z0-9]+/).filter(w=>w.length>3);
+    let scoreWords = 0;
+    pWords.forEach(pw=>{
+      nameWords.forEach(nw=>{
+        const s = similarity(pw, nw);
+        if(s>scoreWords) scoreWords = s;
+      });
+    });
+    const score = Math.max(scoreFull, scoreWords*0.85);
+    if(!best || score>best.score) best = {id:p.id, name:p.name, price:p.price, score};
+  });
+  return best;
+}
+function parseVoiceOrder(rawText){
+  const norm = normalizeStr(rawText);
+  const words = norm.split(' ').filter(Boolean);
+  const clientMatch = bestClientMatch(words);
+  const itemWords = words.slice();
+  if(clientMatch) itemWords.splice(clientMatch.start, clientMatch.len);
+  let itemsText = itemWords.join(' ').replace(/^(pediu|quer|levou|comprou|pegou|vai querer|um pedido de|pedido de)\s+/,'').trim();
+  const chunks = itemsText.split(/\s+e\s+|,|\smais\s/).map(s=>s.trim()).filter(Boolean);
+  const items = chunks.map(chunk=>{
+    const {qty, rest} = extractQty(chunk);
+    const cleanRest = rest.replace(/^(de |o |a |os |as |um |uma )+/,'').trim();
+    if(!cleanRest) return null;
+    const match = bestProductMatch(cleanRest);
+    const ok = match && match.score>=0.55;
+    return { productId: ok?match.id:null, name: ok?match.name:cleanRest, price: ok?match.price:0, qty: qty||1, score: match?match.score:0, guess: cleanRest };
+  }).filter(Boolean);
+  return {
+    clientId: clientMatch && clientMatch.score>=0.5 ? clientMatch.id : null,
+    clientGuessName: clientMatch ? clientMatch.name : null,
+    items
+  };
+}
+function getSpeechRecognitionCtor(){ return window.SpeechRecognition || window.webkitSpeechRecognition || null; }
+function toggleVoiceListening(){
+  const Ctor = getSpeechRecognitionCtor();
+  if(!Ctor){ toast('Reconhecimento de voz não é suportado nesse navegador'); return; }
+  if(voiceListening){ voiceRecognition && voiceRecognition.stop(); return; }
+  voiceRecognition = new Ctor();
+  voiceRecognition.lang = 'pt-BR';
+  voiceRecognition.interimResults = true;
+  voiceRecognition.continuous = false;
+  voiceRecognition.onstart = ()=>{ voiceListening = true; renderVoiceArea(); };
+  voiceRecognition.onresult = (e)=>{
+    let text = '';
+    for(let i=0;i<e.results.length;i++) text += e.results[i][0].transcript;
+    voiceTranscriptText = text;
+    const ta = document.getElementById('voiceTranscript');
+    if(ta) ta.value = text;
+  };
+  voiceRecognition.onerror = (e)=>{ toast('Erro no microfone: '+e.error); };
+  voiceRecognition.onend = ()=>{ voiceListening = false; renderVoiceArea(); };
+  try{ voiceRecognition.start(); }catch(err){ toast('Não deu pra iniciar o microfone'); }
+}
+function processVoiceTranscript(){
+  const ta = document.getElementById('voiceTranscript');
+  const raw = (ta?ta.value:'').trim();
+  voiceTranscriptText = raw;
+  if(!raw){ toast('Fale ou digite alguma coisa primeiro'); return; }
+  voiceParsed = parseVoiceOrder(raw);
+  renderVoiceArea();
+}
+function voiceSetClient(id){ if(!voiceParsed) return; voiceParsed.clientId = id || null; }
+function voiceSetQty(idx, val){
+  if(!voiceParsed) return;
+  const q = parseInt(val,10);
+  voiceParsed.items[idx].qty = q>0?q:1;
+  renderVoiceArea();
+}
+function voiceSetProduct(idx, id){
+  if(!voiceParsed) return;
+  const p = DB.products.find(x=>x.id===id);
+  voiceParsed.items[idx].productId = id || null;
+  voiceParsed.items[idx].name = p ? p.name : voiceParsed.items[idx].guess;
+  voiceParsed.items[idx].price = p ? p.price : 0;
+  renderVoiceArea();
+}
+function voiceRemoveItem(idx){ if(!voiceParsed) return; voiceParsed.items.splice(idx,1); renderVoiceArea(); }
+function voiceAddItem(){
+  if(!voiceParsed) return;
+  voiceParsed.items.push({productId:null, name:'', price:0, qty:1, score:0, guess:'novo item'});
+  renderVoiceArea();
+}
+function voiceReset(){ voiceParsed = null; voiceTranscriptText = ''; renderVoiceArea(); }
+function voiceConfirm(){
+  if(!voiceParsed) return;
+  if(!voiceParsed.clientId){ toast('Selecione o cliente'); return; }
+  if(!voiceParsed.items.length){ toast('Adicione ao menos um item'); return; }
+  if(voiceParsed.items.some(it=>!it.productId)){ toast('Escolha o produto certo pra cada item antes de confirmar'); return; }
+  const items = voiceParsed.items.map(it=>({ id:uid(), productId:it.productId, name:it.name, price:it.price, qty:it.qty, paid:false }));
+  const clientId = voiceParsed.clientId;
+  voiceParsed = null;
+  voiceTranscriptText = '';
+  commitFiado(clientId, todayISO(), items);
+  renderVoiceArea();
+}
+function voiceReviewHtml(){
+  const p = voiceParsed;
+  const clientOptions = DB.clients.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<option value="${c.id}" ${c.id===p.clientId?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
+  const prodOptionsFor = (selId)=> sortProducts(DB.products.slice()).map(pr=>`<option value="${pr.id}" ${pr.id===selId?'selected':''}>${escapeHtml(pr.name)} — ${brl(pr.price)}</option>`).join('');
+  let html = `<div class="tag" style="margin:14px 0 6px;">Revisar antes de confirmar</div>
+    <label>Cliente${p.clientId?'':(p.clientGuessName?` (achei "${escapeHtml(p.clientGuessName)}" mas com pouca confiança — confirme)`:' (não identificado — escolha manualmente)')}</label>
+    <select id="voiceClientSel" onchange="voiceSetClient(this.value)">
+      <option value="">— selecione —</option>
+      ${clientOptions}
+    </select>`;
+  p.items.forEach((it,idx)=>{
+    html += `<div class="list-item" style="flex-wrap:wrap; gap:6px; border-top:1px solid rgba(255,255,255,.1); padding-top:8px; margin-top:8px;">
+      <div style="display:flex; gap:6px; width:100%; align-items:center;">
+        <input type="number" min="1" value="${it.qty}" style="width:52px;" onchange="voiceSetQty(${idx}, this.value)">
+        <select style="flex:1;" onchange="voiceSetProduct(${idx}, this.value)">
+          <option value="">— não reconhecido: "${escapeHtml(it.guess)}" —</option>
+          ${prodOptionsFor(it.productId)}
+        </select>
+        <button class="btn-danger btn-small" style="width:auto;" onclick="voiceRemoveItem(${idx})">🗑️</button>
+      </div>
+      ${!it.productId?`<div style="font-size:.72rem; color:var(--rust); width:100%;">Não reconhecido com confiança — escolha o produto certo acima.</div>`:''}
+    </div>`;
+  });
+  const total = p.items.reduce((s,it)=>s + (it.price||0)*it.qty, 0);
+  html += `<button class="btn-ghost" style="width:100%; margin-top:10px;" onclick="voiceAddItem()">+ Adicionar item</button>
+    <div class="list-item" style="border-top:2px solid var(--mustard); margin-top:10px; padding-top:12px;">
+      <span style="font-weight:700;">Total a adicionar</span>
+      <span class="money owe" style="font-size:1.3rem;">${brl(total)}</span>
+    </div>
+    <button class="btn-main" style="margin-top:10px;" onclick="voiceConfirm()">✅ Confirmar e adicionar à conta</button>
+    <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="voiceReset()">Cancelar / Recomeçar</button>`;
+  return html;
+}
+function renderVoiceArea(){
+  const box = document.getElementById('voiceArea');
+  if(!box) return;
+  const supported = !!getSpeechRecognitionCtor();
+  let html = `<div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+    <button class="btn-main" style="width:auto; margin:0;" onclick="toggleVoiceListening()" ${supported?'':'disabled'}>${voiceListening?'⏹️ Parar':'🎙️ Falar'}</button>
+    ${voiceListening?'<span style="font-size:.8rem; color:var(--mustard);">Ouvindo...</span>':''}
+  </div>`;
+  if(!supported){
+    html += `<p style="font-size:.75rem; color:var(--paper-dim);">Seu navegador não tem reconhecimento de voz nativo — mas dá pra digitar a frase abaixo e testar o reconhecimento de cliente/produtos mesmo assim.</p>`;
+  }
+  html += `<label>Transcrição (edite se precisar)</label>
+    <textarea id="voiceTranscript" rows="2" placeholder="ex: fulana pediu 2 misto com ovo e um mentos" style="width:100%;" oninput="voiceTranscriptText=this.value">${escapeHtml(voiceTranscriptText||'')}</textarea>
+    <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="processVoiceTranscript()">🔎 Reconhecer cliente e produtos</button>`;
+  if(voiceParsed) html += voiceReviewHtml();
+  box.innerHTML = html;
+}
 function renderConfig(){
   const recArea = document.getElementById('recuperacaoArea');
   if(recArea){
@@ -2831,6 +3040,7 @@ function renderConfig(){
       : `<button class="btn-ghost" style="width:100%; opacity:.5;" disabled>↩️ Nenhum extrato limpo recentemente</button>`;
     recArea.innerHTML = html;
   }
+  renderVoiceArea();
   const saved = parseFloat(localStorage.getItem(FONT_SCALE_KEY) || '1');
   document.querySelectorAll('#fontSizeOptions .chip').forEach(chip=>{
     chip.classList.toggle('on', parseFloat(chip.dataset.scale)===saved);
