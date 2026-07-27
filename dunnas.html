@@ -2872,15 +2872,16 @@ function extractQty(chunk){
 function bestClientMatch(words){
   let best = null;
   const maxStart = Math.min(words.length-1, 2);
-  for(let start=0; start<=maxStart; start++){
-    for(let len=1; len<=4 && start+len<=words.length; len++){
+  DB.clients.forEach(cli=>{
+    const cliWords = normalizeStr(cli.name).split(' ').filter(Boolean);
+    const len = cliWords.length;
+    for(let start=0; start<=maxStart; start++){
+      if(start+len>words.length) continue;
       const phrase = words.slice(start,start+len).join(' ');
-      DB.clients.forEach(cli=>{
-        const score = similarity(normalizeStr(cli.name), phrase);
-        if(!best || score>best.score) best = {id:cli.id, name:cli.name, score, start, len};
-      });
+      const score = similarity(cliWords.join(' '), phrase);
+      if(!best || score>best.score) best = {id:cli.id, name:cli.name, score, start, len};
     }
-  }
+  });
   return best;
 }
 function bestProductMatch(phrase){
@@ -2892,13 +2893,13 @@ function bestProductMatch(phrase){
     candidates.forEach(nName=>{
       const scoreFull = similarity(nName, phrase);
       const nameWords = nName.split(/[^a-z0-9]+/).filter(w=>w.length>3);
-      let scoreWords = 0;
+      let coverageSum = 0;
       pWords.forEach(pw=>{
-        nameWords.forEach(nw=>{
-          const s = similarity(pw, nw);
-          if(s>scoreWords) scoreWords = s;
-        });
+        let bestForWord = 0;
+        nameWords.forEach(nw=>{ const s = similarity(pw, nw); if(s>bestForWord) bestForWord = s; });
+        coverageSum += bestForWord;
       });
+      const scoreWords = pWords.length ? coverageSum/pWords.length : 0;
       const score = Math.max(scoreFull, scoreWords*0.85);
       if(!best || score>best.score) best = {id:p.id, name:p.name, price:p.price, score};
     });
@@ -2907,6 +2908,9 @@ function bestProductMatch(phrase){
 }
 function resolveMistoSpecialCase(phrase){
   if(!/\bmist[oa]\b/.test(phrase)) return null;
+  const KNOWN = new Set(['misto','mista','tapioca','cuscuz','ovo','com','e','pao','queijo','presunto','de']);
+  const leftover = phrase.split(' ').filter(w=>w && !KNOWN.has(w));
+  if(leftover.length) return null;
   const hasOvo = /\bovo\b/.test(phrase);
   let targetName;
   if(/\btapioca\b/.test(phrase)){
@@ -2960,6 +2964,30 @@ function extractVoiceDate(norm){
   }
   return { date: today, cleaned: norm };
 }
+function mergeCompoundChunks(chunks){
+  const merged = [];
+  let i = 0;
+  while(i < chunks.length){
+    if(i+1 < chunks.length){
+      const {rest: restA} = extractQty(chunks[i]);
+      const {rest: restB} = extractQty(chunks[i+1]);
+      const cleanA = (restA||chunks[i]).replace(/^(de |o |a |os |as |um |uma )+/,'').trim();
+      const cleanB = (restB||chunks[i+1]).replace(/^(de |o |a |os |as |um |uma )+/,'').trim();
+      const combined = (cleanA+' e '+cleanB).trim();
+      const comboSpecial = resolveMistoSpecialCase(combined);
+      const comboMatch = comboSpecial ? {score:1} : bestProductMatch(combined);
+      const comboScore = comboMatch ? comboMatch.score : 0;
+      if(comboScore>=0.8){
+        merged.push(chunks[i]+' e '+chunks[i+1]);
+        i += 2;
+        continue;
+      }
+    }
+    merged.push(chunks[i]);
+    i += 1;
+  }
+  return merged;
+}
 function parseVoiceOrder(rawText){
   const normFull = normalizeStr(rawText);
   const { date, cleaned } = extractVoiceDate(normFull);
@@ -2969,7 +2997,8 @@ function parseVoiceOrder(rawText){
   const itemWords = words.slice();
   if(clientMatch) itemWords.splice(clientMatch.start, clientMatch.len);
   let itemsText = itemWords.join(' ').replace(/^(pediu|quer|levou|comprou|pegou|vai querer|um pedido de|pedido de)\s+/,'').trim();
-  const chunks = itemsText.split(/\s+e\s+|,|\smais\s/).map(s=>s.trim()).filter(Boolean);
+  let chunks = itemsText.split(/\s+e\s+|,|\smais\s/).map(s=>s.trim()).filter(Boolean);
+  chunks = mergeCompoundChunks(chunks);
   const items = chunks.map(chunk=>{
     const {qty, rest} = extractQty(chunk);
     const cleanRest = rest.replace(/^(de |o |a |os |as |um |uma )+/,'').trim();
@@ -3313,13 +3342,39 @@ function activityRowHtml(a){
   const tag = hasDetail ? 'button' : 'div';
   const typeAttr = hasDetail ? 'type="button"' : '';
   return `<div class="activity-item">
-    <${tag} class="list-item act-row${hasDetail?' act-clickable':''}" ${typeAttr} ${hasDetail?`onclick="toggleActivityDetail('${a.id}')"`:''}>
+    <${tag} class="list-item act-row${hasDetail?' act-clickable':''}" ${typeAttr} ${hasDetail?`data-act-id="${a.id}"`:''}>
       <span>${a.icon||'•'} ${escapeHtml(a.text)}</span>
       <span class="meta" style="white-space:nowrap; display:flex; align-items:center; gap:6px;">${fmtDateTime(a.ts)}${hasDetail?`<span class="act-arrow" id="act-arrow-${a.id}">▾</span>`:''}</span>
     </${tag}>
     ${hasDetail?`<div class="act-detail" id="act-detail-${a.id}" style="display:none;">${activityDetailBody(a)}</div>`:''}
   </div>`;
 }
+let lastActToggleTs = 0;
+let actPointerStart = null;
+document.addEventListener('pointerdown', function(e){
+  const row = e.target.closest('.act-clickable[data-act-id]');
+  actPointerStart = row ? {x:e.clientX, y:e.clientY, id:row.dataset.actId} : null;
+});
+document.addEventListener('pointerup', function(e){
+  if(!actPointerStart) return;
+  const dx = Math.abs(e.clientX-actPointerStart.x);
+  const dy = Math.abs(e.clientY-actPointerStart.y);
+  const id = actPointerStart.id;
+  actPointerStart = null;
+  if(dx>10 || dy>10) return; // foi arrasto/scroll, não um toque
+  const now = Date.now();
+  if(now-lastActToggleTs<400) return;
+  lastActToggleTs = now;
+  toggleActivityDetail(id);
+});
+document.addEventListener('click', function(e){
+  const row = e.target.closest('.act-clickable[data-act-id]');
+  if(!row) return;
+  const now = Date.now();
+  if(now-lastActToggleTs<400) return;
+  lastActToggleTs = now;
+  toggleActivityDetail(row.dataset.actId);
+});
 function renderAtividadePreview(){
   const box = document.getElementById('atividadePreview');
   if(!box) return;
