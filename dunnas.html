@@ -755,6 +755,7 @@
 
     <div class="card">
       <h2>Sobre</h2>
+      <p style="font-size:.95rem; color:var(--mustard-light); font-weight:700; margin:0 0 10px;">📦 Versão do app: <span id="appVersionTag"></span></p>
       <p style="font-size:.82rem; color:var(--paper); margin:0 0 6px;">Desenvolvido por <strong>Leonardo Arruda</strong>.</p>
       <p style="font-size:.78rem; color:var(--paper-dim); margin:0 0 6px;">Hospedado gratuitamente via GitHub Pages. Os dados ficam salvos só neste aparelho, não em nenhum servidor.</p>
       <p style="font-size:.78rem; color:var(--paper-dim); margin:0;">Uso restrito à equipe da Dunnas Alimentação Corporativa.</p>
@@ -851,6 +852,7 @@ function brl(v){ return 'R$ ' + (v||0).toFixed(2).replace('.', ','); }
 function todayISO(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
 const LS_KEY = 'dunnas_gerenciamento_v1';
+const APP_VERSION = 'v. 67';
 
 async function loadAll(){
   try{
@@ -3185,6 +3187,8 @@ function renderVoiceArea(){
   box.innerHTML = html;
 }
 function renderConfig(){
+  const versionTag = document.getElementById('appVersionTag');
+  if(versionTag) versionTag.textContent = APP_VERSION;
   const recArea = document.getElementById('recuperacaoArea');
   if(recArea){
     const z = DB.lastZerarConta;
@@ -3326,14 +3330,14 @@ function activityDetailBody(a){
   if(!m) return '';
   let html = '';
   if(m.items && m.items.length){
-    html += m.items.map(it=>`<div class="list-item" style="padding:3px 0;"><span>${it.qty}x ${escapeHtml(it.name)}</span><span class="money">${brl(it.price*it.qty)}</span></div>`).join('');
+    html += m.items.map(it=>`<div class="list-item" style="padding:3px 0; align-items:flex-start;"><span style="flex:1; padding-right:8px;">${it.qty}x ${escapeHtml(it.name)}</span><span class="money" style="flex-shrink:0; text-align:right; white-space:nowrap;">${brl(it.price*it.qty)}</span></div>`).join('');
   }
   if(m.note){
-    html += `<div class="list-item" style="padding:3px 0;"><span>Observação</span><span>${escapeHtml(m.note)}</span></div>`;
+    html += `<div class="list-item" style="padding:3px 0; align-items:flex-start;"><span style="flex:1; padding-right:8px;">Observação</span><span style="flex-shrink:0; text-align:right;">${escapeHtml(m.note)}</span></div>`;
   }
   if(typeof m.oldTotal === 'number' && typeof m.newTotal === 'number'){
-    html += `<div class="list-item" style="padding:3px 0; border-top:1px solid rgba(255,255,255,.12); margin-top:4px;"><span>Dívida antes</span><span class="money">${brl(m.oldTotal)}</span></div>
-      <div class="list-item" style="padding:3px 0;"><span>Nova dívida</span><span class="money owe">${brl(m.newTotal)}</span></div>`;
+    html += `<div class="list-item" style="padding:3px 0; border-top:1px solid rgba(255,255,255,.12); margin-top:4px;"><span>Dívida antes</span><span class="money" style="flex-shrink:0;">${brl(m.oldTotal)}</span></div>
+      <div class="list-item" style="padding:3px 0;"><span>Nova dívida</span><span class="money owe" style="flex-shrink:0;">${brl(m.newTotal)}</span></div>`;
   }
   return html || '<div class="empty" style="padding:4px 0;">Sem detalhes adicionais.</div>';
 }
@@ -3342,38 +3346,48 @@ function activityRowHtml(a){
   const tag = hasDetail ? 'button' : 'div';
   const typeAttr = hasDetail ? 'type="button"' : '';
   return `<div class="activity-item">
-    <${tag} class="list-item act-row${hasDetail?' act-clickable':''}" ${typeAttr} ${hasDetail?`data-act-id="${a.id}"`:''}>
+    <${tag} class="list-item act-row${hasDetail?' act-clickable':''}" ${typeAttr}>
       <span>${a.icon||'•'} ${escapeHtml(a.text)}</span>
-      <span class="meta" style="white-space:nowrap; display:flex; align-items:center; gap:6px;">${fmtDateTime(a.ts)}${hasDetail?`<span class="act-arrow" id="act-arrow-${a.id}">▾</span>`:''}</span>
+      <span class="meta" style="white-space:nowrap; display:flex; align-items:center; gap:6px;">${fmtDateTime(a.ts)}${hasDetail?`<span class="act-arrow">▾</span>`:''}</span>
     </${tag}>
-    ${hasDetail?`<div class="act-detail" id="act-detail-${a.id}" style="display:none;">${activityDetailBody(a)}</div>`:''}
+    ${hasDetail?`<div class="act-detail" style="display:none;">${activityDetailBody(a)}</div>`:''}
   </div>`;
+}
+function toggleActivityRow(row){
+  const wrapper = row.closest('.activity-item');
+  if(!wrapper) return;
+  const detail = wrapper.querySelector('.act-detail');
+  const arrow = row.querySelector('.act-arrow');
+  if(!detail) return;
+  const open = detail.style.display !== 'none';
+  detail.style.display = open ? 'none' : 'block';
+  if(arrow) arrow.style.transform = open ? '' : 'rotate(180deg)';
 }
 let lastActToggleTs = 0;
 let actPointerStart = null;
 document.addEventListener('pointerdown', function(e){
-  const row = e.target.closest('.act-clickable[data-act-id]');
-  actPointerStart = row ? {x:e.clientX, y:e.clientY, id:row.dataset.actId} : null;
+  const row = e.target.closest('.act-clickable');
+  actPointerStart = row ? {x:e.clientX, y:e.clientY, row} : null;
 });
 document.addEventListener('pointerup', function(e){
   if(!actPointerStart) return;
   const dx = Math.abs(e.clientX-actPointerStart.x);
   const dy = Math.abs(e.clientY-actPointerStart.y);
-  const id = actPointerStart.id;
+  const row = actPointerStart.row;
   actPointerStart = null;
   if(dx>10 || dy>10) return; // foi arrasto/scroll, não um toque
   const now = Date.now();
   if(now-lastActToggleTs<400) return;
   lastActToggleTs = now;
-  toggleActivityDetail(id);
+  toggleActivityRow(row);
 });
 document.addEventListener('click', function(e){
-  const row = e.target.closest('.act-clickable[data-act-id]');
+  const row = e.target.closest('.act-clickable');
   if(!row) return;
   const now = Date.now();
   if(now-lastActToggleTs<400) return;
   lastActToggleTs = now;
-  toggleActivityDetail(row.dataset.actId);
+  toggleActivityRow(row);
 });
 function renderAtividadePreview(){
   const box = document.getElementById('atividadePreview');
@@ -3388,15 +3402,6 @@ function renderAtividade(filter){
   if(filter) items = items.filter(a=>a.text.toLowerCase().includes(filter.toLowerCase()));
   box.innerHTML = items.length ? items.map(activityRowHtml).join('') : '<div class="empty">Nenhuma atividade encontrada.</div>';
 }
-function toggleActivityDetail(id){
-  const detail = document.getElementById('act-detail-'+id);
-  const arrow = document.getElementById('act-arrow-'+id);
-  if(!detail) return;
-  const open = detail.style.display !== 'none';
-  detail.style.display = open ? 'none' : 'block';
-  if(arrow) arrow.style.transform = open ? '' : 'rotate(180deg)';
-}
-
 /* ---------- Init ---------- */
 async function requestPersistentStorage(){
   if(navigator.storage && navigator.storage.persist){
