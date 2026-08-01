@@ -828,7 +828,7 @@ function brl(v){ return 'R$ ' + (v||0).toFixed(2).replace('.', ','); }
 function todayISO(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
 const LS_KEY = 'dunnas_gerenciamento_v1';
-const APP_VERSION = 'v. 71';
+const APP_VERSION = 'v. 72';
 
 async function loadAll(){
   try{
@@ -2587,7 +2587,7 @@ function exportBackupTxt(){
     byCat[cat].forEach(p=>lines.push(`  ${p.name} — ${brl(p.price)}`));
     lines.push('');
   });
-  const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  const blob = new Blob(['\uFEFF'+lines.join('\n')], {type:'text/plain;charset=utf-8'});
   downloadBlobFile(blob, `dunnas-copia-${todayISO()}.txt`);
   toast('Cópia em texto baixada!');
   logActivity('Cópia de segurança em texto exportada', '📄');
@@ -2596,7 +2596,7 @@ function exportClientesTxt(){
   const clientsSorted = DB.clients.slice().sort((a,b)=>a.name.localeCompare(b.name));
   const lines = clientsSorted.map(c=>`${c.name} — ${clientDebt(c.id).toFixed(2).replace('.',',')} R$`);
   if(!lines.length) lines.push('(nenhum cliente cadastrado)');
-  const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  const blob = new Blob(['\uFEFF'+lines.join('\n')], {type:'text/plain;charset=utf-8'});
   downloadBlobFile(blob, `dunnas-clientes-${todayISO()}.txt`);
   toast('Lista de clientes baixada!');
   logActivity('Lista de clientes e dívidas exportada em texto', '📄');
