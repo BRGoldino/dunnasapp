@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dunnas-v67';
+const CACHE_NAME = 'dunnas-v71';
 const ASSETS = ['./dunnas.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -18,11 +18,18 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if(req.method !== 'GET') return; // não intercepta POST (ex: webhook do Discord)
+  let url;
+  try{ url = new URL(req.url); }catch(e){ return; }
+  if(url.origin !== self.location.origin) return; // não cacheia recursos de fora do app
   event.respondWith(
-    fetch(event.request).then((response) => {
-      const copy = response.clone();
-      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+    fetch(req).then((response) => {
+      if(response && response.ok){
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+      }
       return response;
-    }).catch(() => caches.match(event.request))
+    }).catch(() => caches.match(req))
   );
 });

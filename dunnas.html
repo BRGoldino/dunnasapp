@@ -686,53 +686,28 @@
     </div>
 
     <div class="card">
-      <h2>Notas de atualização</h2>
-      <p style="font-size:.8rem; color:var(--paper-dim); margin-top:0;">Mais recente:</p>
-      <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0 0 12px;">
-        <li><strong>Pedido por voz (experimental):</strong> nova área em Configurações → "Área de testes" — fala o pedido (ex: "Fulana pediu 2 misto com ovo e um mentos ontem") e o app tenta reconhecer cliente, produtos e até a data, sempre com tela de revisão antes de confirmar</li>
-        <li>Reconhecimento por voz/aproximação entende "pratinho" como Almoço Pequeno, "refri" como Refrigerante 250ml, e "misto" sozinho como sanduíche — mas como tapioca ou cuscuz mista se a pessoa mencionar isso, com ou sem ovo</li>
-        <li>Corrigido: gaveta de categoria de produtos (Fiado) e gaveta de detalhes da Atividade não abrem mais seleção de texto/menu "Pesquisar no Google" ao tocar em celular — o toque agora é sempre reconhecido, independente de quantos itens o pedido tinha</li>
-        <li>Ficha do cliente: novo botão "Alterar data" em cada pedido registrado, com calendário nativo — corrige pedido lançado no dia errado sem precisar excluir e recriar</li>
-        <li>Configurações → Recuperação: "reverter último zerar conta" e "restaurar último extrato" voltam a conta do cliente exatamente pro estado de antes daquela ação — mesmo que tenha rodado outro fiado, pagamento ou ajuste depois por engano</li>
-        <li>Atividade: itens de fiado, quitação, dia quitado, exclusão de pedido e ajuste manual agora expandem (gaveta) mostrando os itens, a dívida antes e a nova dívida; mais ações passaram a ser registradas (ativar/desligar webhook do Discord, baixar/compartilhar extrato e cardápio)</li>
-        <li>Seleção de produtos no Fiado virou gaveta por categoria — todas sempre visíveis, expande ao tocar, e fecha automaticamente sempre que você volta pra aba</li>
-        <li>Novos produtos padrão: "Energético" (R$ 12,00, Bebidas), "Misto com ovo" (R$ 9,00, Sanduíches) e "Mentos" (R$ 3,00, Bomboniere)</li>
-        <li>Novo cliente padrão: "Hudson"</li>
-        <li>Cardápio e Extrato: quando a imagem é dividida em várias partes, o indicador "Parte X/Y" virou um selo no canto superior direito em vez de texto colado no título — o nome do cliente/cardápio não desloca mais pra esquerda. Também deixamos "Extrato gerado em..." e "Total em aberto" com cinza mais escuro e legível (antes estavam apagados demais)</li>
-        <li>Baixar várias imagens do Cardápio/Extrato agora acontece uma de cada vez, com pequeno intervalo e barra de progresso — evita o navegador bloquear/pedir permissão por causa de vários downloads simultâneos</li>
-        <li>Configurações do extrato ganharam controle manual da divisão de imagens (automática, manual com nº de linhas por imagem, ou forçar imagem única) — útil pra corrigir na mão se a divisão automática sair errada</li>
-        <li>Baixar ou compartilhar o cardápio e o extrato agora mostra uma pré-visualização de todas as imagens antes de confirmar</li>
-        <li>Exceção manual de ordem: "Porção de Proteína" sempre aparece logo depois de "Porção de Guarnição", mesmo fugindo da lógica de preço/ordem alfabética</li>
-        <li>Produtos com preço exatamente igual dentro da mesma categoria agora aparecem em ordem alfabética (no cardápio e na seleção de produtos do Fiado)</li>
-        <li>Novo produto padrão: "Biscoito Recheado G" (R$ 3,50) na categoria Bomboniere</li>
-        <li>Novo produto padrão: "Paçoquita" (R$ 1,50) na categoria Bomboniere</li>
-        <li>Aba Cardápio: botão "Imprimir" removido, substituído por "Compartilhar" (envia a imagem direto pra outros apps/redes sociais, igual já funcionava no Extrato)</li>
-        <li>Imagens do Cardápio e do Extrato agora são divididas automaticamente em várias partes quando ficam muito grandes, evitando texto pixelado/ilegível ao baixar ou compartilhar</li>
-        <li>Corrigido de vez: preço agora fica sempre embaixo do nome do produto (nunca mais dividindo linha com ele), garantindo espaço máximo pra nomes longos tipo "Refrigerante" não quebrarem no meio</li>
-        <li>Corrigido: quando o nome do produto é longo em fontes grandes, o preço agora desce pra linha de baixo em vez de quebrar a palavra no meio</li>
-        <li>Busca por "pratinho" na aba Fiado já encontra o Almoço Pequeno (apelido interno, nunca aparece na tela)</li>
-        <li>Corrigido: cabeçalho de categoria (tipo "BOMBONIERE") não fica mais colado do lado do último produto da categoria anterior — sempre em linha própria agora</li>
-        <li>Cartões de produto no fiado alinhados ao topo, ficando mais organizados quando o nome quebra em 2 linhas</li>
-        <li>Corrigido de vez: título "Dunnas Gerenciamento" tem um limite máximo de tamanho, garantindo que nunca mais quebre palavra no meio em nenhum tamanho de fonte</li>
-        <li>Seleção de produtos no Fiado redesenhada: cada categoria com ícone próprio, produtos em cartões com preço em destaque e marcação (✓) clara de selecionado</li>
-        <li>Corrigido: aviso "selecione um cliente" não fica mais colado na barra do carrinho</li>
-      </ul>
-      <p style="font-size:.8rem; color:var(--paper-dim); margin:0 0 4px;">Anteriormente:</p>
-      <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0;">
-        <li><strong>Stats:</strong> aba reformulada por completo (navegação por mês, resumo de fiado/recebido/ticket médio, gráfico de faturamento por dia, melhor dia do mês, faturamento por categoria), "Clientes frequentes" com visual de bolinha numerada + barra, botão de resetar estatísticas sem apagar pedidos</li>
-        <li><strong>Backup:</strong> corrigido bug de campo de configuração não salvo/restaurado ao importar; backup automático ativado de fábrica (celular a cada 6h, Discord a cada 1h)</li>
-        <li><strong>Produtos:</strong> categoria Bomboniere criada (Chocolate, Pirulito Pop, Jujuba, Cocada, Pastilha Halls), Porção de Guarnição e Porção de Proteína adicionadas</li>
-        <li><strong>Fiado:</strong> não vem mais com o primeiro cliente da lista pré-selecionado, evitando mandar fiado pra pessoa errada por esquecimento</li>
-        <li><strong>Extrato:</strong> "Limpar histórico" renomeado pra "Limpar extrato" (nome mais claro); cor e tamanho do nome do cliente personalizáveis nas configurações</li>
-        <li><strong>Tela inicial:</strong> resumo trocado pra uma coluna só, sem vazar da tela em nenhum tamanho de letra</li>
-        <li><strong>Extrato:</strong> reformulado em blocos por dia, preços destacados, tela cheia com baixar/compartilhar imagem</li>
-        <li><strong>Cardápio:</strong> ordenado por preço dentro de cada categoria, tela cheia, baixar e imprimir, preços destacados</li>
-        <li><strong>Fiado:</strong> carrinho com barra fixa no rodapé, tela de revisão antes de confirmar, seleção de produtos por categoria com busca, vírgula automática no preço</li>
-        <li><strong>Clientes:</strong> renomear, zerar conta, quitar o dia inteiro com um toque, limpar histórico antigo, remoção com confirmação mais simples, ajuste manual de dívida com nomes claros ("valor adicionado"/"pagamento recebido")</li>
-        <li><strong>Produtos:</strong> importar/atualizar em lote por arquivo, botões de "produtos padrão" e "clientes padrão" prontos</li>
-        <li><strong>Configurações:</strong> temas de cor, ícone/nome do app personalizável, tamanho de letra, backup automático separado por celular/Discord, link do webhook oculto, cópia de segurança em texto, zona de risco pra resetar tudo</li>
-        <li><strong>Geral:</strong> menu de abas corrigido (não espreme mais o texto), aba ativa bem mais visível, zoom liberado, aba de Atividade recente</li>
-      </ul>
+      <button type="button" class="product-cat-header" style="margin:0;" onclick="toggleChangelog()">
+        <span class="pch-icon">📋</span><span class="pch-label">Notas de atualização</span>
+        <span class="pch-arrow" id="changelogArrow">▾</span>
+      </button>
+      <div id="changelogBody" style="display:none; margin-top:10px;">
+        <ul style="font-size:.8rem; color:var(--paper); padding-left:18px; margin:0;">
+          <li>Corrigida de vez a gaveta da Atividade que só expandia em alguns pedidos: o resumo da tela Início e a lista completa mostravam as mesmas atividades recentes com o mesmo identificador, então o toque às vezes abria a cópia escondida em vez da visível. Agora cada toque manipula direto o item que foi realmente tocado, sem depender de identificador — não deve mais falhar independente de quantos pedidos tiver</li>
+          <li>Corrigido alinhamento do preço nos detalhes expandidos da Atividade quando o nome do produto é longo e quebra linha</li>
+          <li>Configurações → Sobre agora mostra o número da versão instalada, pra confirmar se a atualização já chegou no aparelho</li>
+          <li>Botão de webhook do Discord agora manda o backup real na hora que você aperta, pra qualquer intervalo automático configurado (não só espera o próximo envio programado)</li>
+          <li>Pedido por voz: corrigido erro que separava nomes de produto com "e" no meio em dois itens errados (ex: "tapioca com ovo e queijo" virava dois pedidos inventados); corrigido bug raro que "comia" a primeira palavra do pedido junto com o nome do cliente reconhecido</li>
+          <li>Pedido por voz: correção de produto errado agora abre o mesmo seletor com busca e categorias do Fiado, em tela cheia — antes cortava o nome do produto e a lista vinha desorganizada</li>
+          <li>Pedido por voz: reconhece "pratinho" como Almoço Pequeno, "refri" como Refrigerante 250ml, "misto" sozinho como sanduíche (ou como tapioca/cuscuz mista se você mencionar isso, com ou sem ovo), e a data falada ("hoje", "ontem", "dia 20", nome do dia da semana) — com opção de corrigir a data manualmente na tela de revisão</li>
+          <li>Ficha do cliente: botão "Alterar data" em cada pedido registrado, com calendário nativo</li>
+          <li>Configurações → Recuperação: "reverter último zerar conta" e "restaurar último extrato" voltam a conta do cliente exatamente pro estado de antes daquela ação, mesmo com fiados/ajustes feitos depois por engano</li>
+          <li>Atividade: itens de fiado, quitação, dia quitado, exclusão de pedido e ajuste manual expandem mostrando os itens e a dívida antes/depois; mais ações registradas (webhook, extrato/cardápio baixado ou compartilhado)</li>
+          <li>Seleção de produtos no Fiado virou gaveta por categoria, sempre visíveis, fecha automaticamente ao voltar pra aba</li>
+          <li>Novos produtos padrão: "Vitamina de Açaí" (R$ 8,00, Vitaminas), "Energético" (R$ 12,00, Bebidas), "Misto com ovo" (R$ 9,00, Sanduíches), "Mentos" (R$ 3,00, Bomboniere)</li>
+          <li>Novo cliente padrão: "Hudson"</li>
+          <li>Cardápio/Extrato: selo de "Parte X/Y" no canto (não desloca mais o título); downloads múltiplos um de cada vez com barra de progresso; controle manual da divisão de imagens; pré-visualização antes de baixar/compartilhar</li>
+        </ul>
+      </div>
     </div>
 
     <div class="card">
@@ -751,6 +726,7 @@
       <h2>Cópia de segurança em texto</h2>
       <p style="font-size:.78rem; color:var(--paper-dim); margin-top:0;">Alternativa ao backup .json — um arquivo de texto simples, fácil de ler, com tudo o que está registrado. Não serve pra restaurar no app, é só pra conferência ou guardar uma cópia legível.</p>
       <button class="btn-main" onclick="exportBackupTxt()">⬇ Exportar cópia em .txt</button>
+      <button class="btn-ghost" style="width:100%; margin-top:8px;" onclick="exportClientesTxt()">⬇ Exportar lista de clientes e dívidas em .txt</button>
     </div>
 
     <div class="card">
@@ -789,7 +765,7 @@
         <div class="chip" data-hours="24" onclick="setDiscordBackupInterval(24)">24h</div>
       </div>
       <small class="hint">Esse tempo é independente do backup local — dá pra manter o do celular em 24h e deixar o do Discord bem mais frequente, por exemplo.</small>
-      <button class="btn-main" style="width:100%; margin-top:10px;" onclick="testDiscordWebhook()">🔧 Enviar teste agora</button>
+      <button class="btn-main" style="width:100%; margin-top:10px;" onclick="testDiscordWebhook()">📤 Enviar backup agora</button>
     </div>
 
     <div class="card">
@@ -852,7 +828,7 @@ function brl(v){ return 'R$ ' + (v||0).toFixed(2).replace('.', ','); }
 function todayISO(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
 const LS_KEY = 'dunnas_gerenciamento_v1';
-const APP_VERSION = 'v. 67';
+const APP_VERSION = 'v. 71';
 
 async function loadAll(){
   try{
@@ -1376,7 +1352,7 @@ function loadDefaultProducts(){
   renderProdutosLista();
 }
 
-const DEFAULT_CLIENTS = ["Alexandre", "Alexsandro (Alê)", "Anízia", "Arcádia", "Bianca", "Camila", "Carol", "Cássia", "César", "Gabriela", "Geovana", "Gleison", "Gustavo", "Halison", "Honorato", "Hudson", "Jardel", "Jenifer", "João Victor", "Letícia", "Lorena", "Lívia", "Manuel", "Marcelo", "Meire", "Mirela", "Mônica", "Natália", "Nilson", "Raquel", "Ricardo", "Sandra", "Sarah", "Seu Edilson", "Vanessa", "Victor", "Wedson", "Wilker Lima", "Wilkie Mendes", "Ítalo"];
+const DEFAULT_CLIENTS = ["Alessandra (Consórcio)", "Alexandre", "Alexsandro (Alê)", "Anízia", "Arcádia", "Bianca", "Camila", "Carol", "Cássia", "César", "Gabriela", "Geovana", "Gleison", "Gustavo", "Halison", "Honorato", "Hudson", "Jardel", "Jenifer", "João Victor", "Jonathan", "Letícia", "Lorena", "Lívia", "Manuel", "Marcelo", "Meire", "Mirela", "Mônica", "Natália", "Nilson", "Raquel", "Ricardo", "Sandra", "Sarah", "Seu Edilson", "Vanessa", "Victor", "Wedson", "Wilker Lima", "Wilkie Mendes", "Ítalo"];
 function loadDefaultClients(){
   if(!confirm(`Isso vai cadastrar os ${DEFAULT_CLIENTS.length} clientes da sua lista, todos com conta zerada.\n\nQuem já existir com o mesmo nome é ignorado (não duplica, não mexe na dívida de quem já tem). Produtos e pedidos não são afetados.\n\nContinuar?`)) return;
   const existentes = new Set(DB.clients.map(c=>c.name.trim().toLowerCase()));
@@ -2616,6 +2592,15 @@ function exportBackupTxt(){
   toast('Cópia em texto baixada!');
   logActivity('Cópia de segurança em texto exportada', '📄');
 }
+function exportClientesTxt(){
+  const clientsSorted = DB.clients.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  const lines = clientsSorted.map(c=>`${c.name} — ${clientDebt(c.id).toFixed(2).replace('.',',')} R$`);
+  if(!lines.length) lines.push('(nenhum cliente cadastrado)');
+  const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  downloadBlobFile(blob, `dunnas-clientes-${todayISO()}.txt`);
+  toast('Lista de clientes baixada!');
+  logActivity('Lista de clientes e dívidas exportada em texto', '📄');
+}
 const THEMES = {
   classico: { '--umber':'#2b241c', '--umber-2':'#38301f', '--paper':'#f2e9d8', '--paper-dim':'#cfc2a2', '--mustard':'#c99a2e', '--mustard-light':'#e3b94a', '--olive':'#5c6b3f', '--rust':'#a54a2a', '--ink':'#241d14', '--line':'#8a7a54' },
   floresta: { '--umber':'#1b2618', '--umber-2':'#233220', '--paper':'#eaf2e2', '--paper-dim':'#b9c9ac', '--mustard':'#7fa650', '--mustard-light':'#9bc76a', '--olive':'#4a6b3a', '--rust':'#c26b2e', '--ink':'#14200f', '--line':'#5c7a4a' },
@@ -2804,15 +2789,20 @@ function saveDiscordWebhook(){
 async function testDiscordWebhook(){
   const url = localStorage.getItem(DISCORD_WEBHOOK_KEY);
   if(!url){ toast('Cole e salve o link do webhook primeiro'); return; }
-  toast('Enviando teste...');
+  toast('Enviando backup...');
   try{
-    const resp = await fetch(url, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ content: `🔧 Teste de conexão do Dunnas Gerenciamento — se você está vendo isso, está tudo funcionando (${fmtDate(todayISO())}).` })
-    });
-    if(resp.ok){ toast('Teste enviado! Confira o canal do Discord.'); }
-    else{ toast(`Discord recusou (código ${resp.status}) — confira o link`); }
+    const { blob, filename } = buildBackupBlob();
+    const form = new FormData();
+    form.append('content', `🔧 Backup enviado manualmente — ${fmtDate(todayISO())}`);
+    form.append('file', blob, filename);
+    const resp = await fetch(url, { method:'POST', body: form });
+    if(resp.ok){
+      localStorage.setItem('dunnas_last_discord_backup_ts', new Date().toISOString());
+      logActivity('Backup enviado manualmente pro Discord', '📤');
+      toast('Backup enviado! Confira o canal do Discord.');
+    } else {
+      toast(`Discord recusou (código ${resp.status}) — confira o link`);
+    }
   }catch(err){
     console.error('Erro no teste do webhook:', err);
     toast('Erro de conexão ao testar — veja o console');
@@ -3401,6 +3391,14 @@ function renderAtividade(filter){
   let items = DB.activity;
   if(filter) items = items.filter(a=>a.text.toLowerCase().includes(filter.toLowerCase()));
   box.innerHTML = items.length ? items.map(activityRowHtml).join('') : '<div class="empty">Nenhuma atividade encontrada.</div>';
+}
+function toggleChangelog(){
+  const body = document.getElementById('changelogBody');
+  const arrow = document.getElementById('changelogArrow');
+  if(!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if(arrow) arrow.style.transform = open ? '' : 'rotate(180deg)';
 }
 /* ---------- Init ---------- */
 async function requestPersistentStorage(){
